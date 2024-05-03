@@ -1,46 +1,88 @@
 <?php
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
+header("Access-Control-Allow-Methods: *");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $userId = htmlspecialchars(trim($_POST["MAID"]));
-  $userUsername = trim($_POST["userName"]);
-  $userPassword = htmlspecialchars(trim($_POST["pwd"]));
-  $userName = htmlspecialchars(trim($_POST["name"]));
-  $userEmail = htmlspecialchars(trim($_POST["email"]));
+function createConnection()
+{
+  $dsn = "mysql:host=localhost;dbname=oralradiology";
+  $dbUserName = "root";
+  $dbPassword = "";
 
-  $userType = trim($_POST["userType"]);
-  if ($userName != "" && $userEmail != "" && $userId != "" && $userUsername != "" && $userPassword != "") {
-    require_once('./includes.inc.php');
-    $query = "INSERT INTO users (Username, Password, MSAId, Name, Email, Type) VALUES (:username, :password, :MSAid, :name, :email, :type)";
+  try {
+    $pdo = new PDO($dsn, $dbUserName, $dbPassword);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $pdo;
+  } catch (PDOException $e) {
+    echo "Connection Failed: " . $e->getMessage() . "<br>";
+    return null;
+  }
+}
+
+function getBoundParameters($stmt)
+{
+  $boundParams = [];
+
+  // Get bound parameters and their values
+  foreach ($stmt->debugDumpParams() as $param) {
+    $boundParams[$param['paramName']] = $param['paramValue'];
+  }
+
+  return $boundParams;
+}
+
+function Insert($pdo, $postKeys, $tableColumns, $tableName, $hashName)
+{
+  $ready = true;
+  foreach ($postKeys as $key => $value) {
+    if (htmlspecialchars(trim($value)) === "")
+      $ready = false;
+  }
+
+  if ($ready === true) {
+    require("./includes.inc.php");
+    if ($hashName !== "")
+      $postKeys[$hashName] = password_hash($postKeys[$hashName], PASSWORD_BCRYPT, ['cost' => 12]);
+
+    $query = "INSERT INTO $tableName (";
+    $query .= implode(", ", $tableColumns);
+    $query .= ") VALUES (";
+    foreach ($tableColumns as $key => $value) {
+      $variable = htmlspecialchars(trim($postKeys[$value]));
+      $query .= "'$variable', ";
+    }
+    $query = rtrim($query, ", "); // Remove trailing comma
+    $query .= ")";
 
     $stmt = $pdo->prepare($query);
-
-    $stmt->bindParam(':username', $userUsername);
-    $stmt->bindParam(':password', $userPassword);
-    $stmt->bindParam(':MSAid', $userId);
-    $stmt->bindParam(':name', $userName);
-    $stmt->bindParam(':email', $userEmail);
-    $stmt->bindParam(':type', $userType);
+    // Execute the statement
     $stmt->execute();
+    return $pdo->lastInsertId();
+  }
+  return -1;
+}
 
-    $table2 = match ($userType) {
-      "Student" => "Insert into students (user) values (:user)",
-      "Professor" => "Insert into professors (user) values (:user)",
-      "Admin" => "Insert into admins (user) values (:user)",
-    };
-    // if()
-    $lastIndex = $pdo->lastInsertId();
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $pdo = createConnection();
+  $userType = trim($_POST["Type"]);
+  $tableColumns = ["Username", "Password", "Type", "MSAId", "Name", "Email"];
+  $lastIndex = Insert($pdo, $_POST, $tableColumns, "users", "Password");
+
+  $table2 = match ($userType) {
+    "Student" => "Insert into students (user) values (:user)",
+    "Professor" => "Insert into professors (user) values (:user)",
+    "Admin" => "Insert into admins (user) values (:user)",
+  };
+  // $lastIndex = $pdo->lastInsertId();
+  if ($lastIndex > 0) {
+
     $stmt = $pdo->prepare($table2);
     $stmt->bindParam(":user", $lastIndex);
     $stmt->execute();
-
-    $pdo = $stmt = null;
-    echo json_encode($_POST);
-    die();
   }
-  // $json_data = json_encode($_POST);
-  // echo $json_data;
-} else {
-  echo "Not post";
-  // header("./index.php?method=1");
+
+  $pdo = $stmt = null;
+  die();
 }
