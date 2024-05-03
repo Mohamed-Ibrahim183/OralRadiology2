@@ -27,7 +27,7 @@ if ($_FILES) {
     exit();
   }
 
-  $targetDir = "../OralImages/";
+  $targetDir = "./OralImages/";
   $targetFile = $targetDir . $fileName;
 
   if (move_uploaded_file($fileTmpName, $targetFile)) {

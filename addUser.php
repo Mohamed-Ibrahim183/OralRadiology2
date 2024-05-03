@@ -19,18 +19,6 @@ function createConnection()
   }
 }
 
-function getBoundParameters($stmt)
-{
-  $boundParams = [];
-
-  // Get bound parameters and their values
-  foreach ($stmt->debugDumpParams() as $param) {
-    $boundParams[$param['paramName']] = $param['paramValue'];
-  }
-
-  return $boundParams;
-}
-
 function Insert($pdo, $postKeys, $tableColumns, $tableName, $hashName)
 {
   $ready = true;
@@ -61,21 +49,64 @@ function Insert($pdo, $postKeys, $tableColumns, $tableName, $hashName)
   }
   return -1;
 }
+function saveImage($id, $pdo)
+{
+  $maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+  $file = $_FILES["personalImage"];
+  $fileName = $file["name"];
+  $fileSize = $file["size"];
+  $fileTmpName = $file["tmp_name"];
+  $fileType = $file["type"];
+  $fileError = $file["error"];
+
+  $allowedTypes = array("image/jpeg", "image/png", "image/gif");
+  if (!in_array($fileType, $allowedTypes)) {
+    echo "Error: File is not an image.";
+    // exit();
+    return;
+  }
+
+  // Check file size
+  if ($fileSize > $maxFileSize) {
+    echo "Error: File size exceeds the maximum limit (5MB).";
+    // exit();
+    return;
+  }
+
+  $targetDir = "./uploads/";
+  $targetFile = $targetDir . $fileName;
+
+  if (move_uploaded_file($fileTmpName, $targetFile)) {
+    $query = "Update users set personalImage =:target where Id =:selected;";
+    $stmt = $pdo->prepare($query);
+    $stmt->bindParam(":target", $targetFile);
+    $stmt->bindParam(":selected", $id);
+    $stmt->execute();
+    echo "DONE";
+  } else {
+    echo "Sorry, there was an error uploading your file.";
+  }
+}
 
 
-
+// print_r($_POST);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $pdo = createConnection();
   $userType = trim($_POST["Type"]);
   $tableColumns = ["Username", "Password", "Type", "MSAId", "Name", "Email"];
   $lastIndex = Insert($pdo, $_POST, $tableColumns, "users", "Password");
 
+  if (isset($_FILES["personalImage"])) {
+    saveImage($lastIndex, $pdo);
+  }
+
+
   $table2 = match ($userType) {
     "Student" => "Insert into students (user) values (:user)",
     "Professor" => "Insert into professors (user) values (:user)",
     "Admin" => "Insert into admins (user) values (:user)",
   };
-  // $lastIndex = $pdo->lastInsertId();
+  $lastIndex = $pdo->lastInsertId();
   if ($lastIndex > 0) {
 
     $stmt = $pdo->prepare($table2);
