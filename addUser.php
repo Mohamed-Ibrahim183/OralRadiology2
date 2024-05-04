@@ -93,7 +93,7 @@ function saveImage($id, $pdo)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $pdo = createConnection();
   $userType = trim($_POST["Type"]);
-  $tableColumns = ["Username", "Password", "Type", "MSAId", "Name", "Email"];
+  $tableColumns = [ "Password","MSAId","Name","Email", "Type"];
   $lastIndex = Insert($pdo, $_POST, $tableColumns, "users", "Password");
 
   if (isset($_FILES["personalImage"])) {

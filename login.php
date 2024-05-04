@@ -20,30 +20,30 @@ if ($conn->connect_error) {
 
 $input = json_decode(file_get_contents("php://input"), true);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!isset($input['username'], $input['password'])) {
+    if (!isset($input['MSAId'], $input['password'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Username or password not provided']);
+        echo json_encode(['error' => 'Id or password not provided']);
         exit;
     }
 
-    $username = $input['username'];
+    $MSAId = $input['MSAId'];
     $password = $input['password'];
 
-    $stmt = $conn->prepare("SELECT Id, Type FROM users WHERE username = ? AND password = ?");
+    $stmt = $conn->prepare("SELECT Id, Type FROM users WHERE MSAId = ? AND password = ?");
     if (!$stmt) {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to prepare statement']);
         exit;
     }
     
-    $stmt->bind_param("ss", $username, $password);
+    $stmt->bind_param("ss", $MSAId, $password);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
         $_SESSION['userId'] = $row['Id']; // Store user ID in session
         echo json_encode(['redirect' => true, 'usertype' => $row['Type'], 'userId' => $row['Id']]);
     } else {
-        echo json_encode(['error' => 'Invalid username or password']);
+        echo json_encode(['error' => 'Invalid Id or password']);
     }
     $stmt->close();
 }
