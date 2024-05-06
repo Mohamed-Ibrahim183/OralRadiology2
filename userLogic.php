@@ -27,7 +27,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $data = $user->Login($_POST["MSAId"], $_POST["Password"]);
       if ($data)
         echo json_encode($data);
-      // print_r($_POST);
     }
     die();
   case "GET":
@@ -36,5 +35,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     }
     if ($path[count($path) - 2] === "getUserMSAId") {
       echo json_encode($user->getUser($last, "MSAId"));
+    }
+    if ($last === "Users") {
+      $results = $user->getAll();
+      if ($results) {
+        echo json_encode($results);
+      }
     }
 }

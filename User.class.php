@@ -165,10 +165,24 @@ class USER
       return false;
     }
   }
-  public function logout()
+
+  public function getIMage($id)
   {
-    session_start();
-    session_unset();
-    session_destroy();
+    $result = $this->getUser($id, "Id");
+    if ($this->PersonalImage)
+      return $this->PersonalImage;
+  }
+  public function getAll()
+  {
+    $query = "Select * from users;";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($results) {
+      foreach ($results as $key => $value) {
+        unset($value["Password"]);
+      }
+    }
+    return $results;
   }
 }
