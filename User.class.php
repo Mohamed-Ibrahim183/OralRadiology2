@@ -185,4 +185,14 @@ class USER
     }
     return $results;
   }
+
+  public function getSpecificType($type)
+  {
+    $query = "Select * from users Where Type =:selected;";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $type);
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $result;
+  }
 }

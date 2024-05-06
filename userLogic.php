@@ -42,4 +42,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($results);
       }
     }
+    if ($path[count($path) - 2] === "Users") {
+      echo json_encode($user->getSpecificType($last));
+    }
 }
