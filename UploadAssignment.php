@@ -4,7 +4,6 @@ require 'connection.php';
 $userId = isset($_POST['userId']) ? intval($_POST['userId']) : null;
 $assignmentId = isset($_POST['assignmentId']) ? intval($_POST['assignmentId']) : null;
 
-// Check if userID and assignmentID are provided
 if (!$userId || !$assignmentId) {
     echo json_encode(['error' => 'Missing user or assignment ID']);
     exit;
@@ -45,7 +44,7 @@ foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
             echo json_encode(['error' => 'Failed to prepare statement: ' . $conn->error]);
             exit;
         }
-        $dbPath = "Projects/uploads/$msaId/" . $newFileName; // Storing relative path
+        $dbPath = "Projects/uploads/$msaId/" . $newFileName; 
         $stmt->bind_param('sii', $dbPath, $userId, $assignmentId);
 
         // Execute the statement

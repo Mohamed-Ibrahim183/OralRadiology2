@@ -1,13 +1,6 @@
 <?php
-require'connection.php'
+require'connection.php';
 
-// Create connection to MySQL
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
 
 // SQL to fetch assignments
 $sql = "SELECT Name, Topic , Id FROM assignments";
