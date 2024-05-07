@@ -13,21 +13,20 @@ class Assignment {
     }
     public function insertAssignment($data) {
         if (empty($data['Name']) || empty($data['ProfessorId']) || empty($data['maxLimitImages']) || empty($data['Topic'])) {
-            return false;  // Data validation
+            echo json_encode(['error' => 'Missing required fields']); 
+            http_response_code(400); // Bad request
+            return false;
         }
-        
         $stmt = $this->conn->prepare("INSERT INTO assignments (Name, ProfessorId, maxLimitImages, Topic) VALUES (?, ?, ?, ?)");
         if (!$stmt) {
             echo "Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error;
             return false;
         }
-
         $stmt->bind_param("siis", $data['Name'], $data['ProfessorId'], $data['maxLimitImages'], $data['Topic']);
         if (!$stmt->execute()) {
             echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
             return false;
         }
-
         $stmt->close();
         return true;
     }
