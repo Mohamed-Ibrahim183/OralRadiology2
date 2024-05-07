@@ -178,3 +178,25 @@ Access at 2024-05-07 02:08:02
 Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
 Access at 2024-05-07 02:08:02
 Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 11:03:31
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:03:31
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:11:40
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:11:40
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:15:08
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:15:09
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:30:35
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:30:35
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:32:36
+Access at 2024-05-07 11:32:36
+Access at 2024-05-07 11:32:43
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 11:32:43
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
