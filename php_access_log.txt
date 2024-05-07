@@ -1,0 +1,180 @@
+Access at 2024-05-07 00:50:04
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:50:04
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:50:08
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:50:08
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:56:50
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:56:50
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:56:54
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:56:54
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:57:02
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:57:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:57:35
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:57:35
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:57:59
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:57:59
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:58:08
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:58:08
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:58:22
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:58:22
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:58:25
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:58:25
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 00:58:29
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 00:58:29
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:07:40
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:07:40
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:27:13
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:27:13
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:39
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:39
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:45
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:46
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:47
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 01:46:48
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:07:58
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:07:59
+Data fetched for assignment ID 1: {"Name":"Assignment 1","Topic":"Topic 1","maxLimitImages":4}
+Access at 2024-05-07 02:08:01
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:01
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
+Access at 2024-05-07 02:08:02
+Data fetched for assignment ID 2: {"Name":"Assignment 2","Topic":"Topic 2","maxLimitImages":4}
