@@ -58,7 +58,7 @@ class Assignment {
         }
         return json_encode($assignments);
     }
-    public function uploadImages($files, $assignmentId, $studentId, $maxImages) {
+    public function uploadImages($files, $assignmentId, $studentId, $maxImages, $ASName, $MSAId) {
         $uploadedFiles = 0;
         $responses = [];
         foreach ($files['tmp_name'] as $key => $tmpName) {
@@ -67,17 +67,26 @@ class Assignment {
                 break;
             }
 
-            $originalName = basename($files['name'][$key]);
-            $newFileName = "assignment{$assignmentId}_student{$studentId}_{$originalName}";
-            $targetPath = "Students/" . $newFileName;
+          //  $originalName = basename($files['name'][$key]);
+            $studentDirectory = "../uploads/$ASName";
+            if (!file_exists($studentDirectory)) {
+                mkdir($studentDirectory, 0777, true);
+            }
+            $studentDirectory = "../uploads/$ASName/$MSAId";
+            if (!file_exists($studentDirectory)) {
+                mkdir($studentDirectory, 0777, true);
+            }
+            $numFiles =1+ count(array_diff(scandir($studentDirectory), array('.', '..')));
 
+            $newFileName = "{$ASName}-student-{$MSAId}-Img{$numFiles}.jpg";
+            $targetPath = "../uploads/$ASName/$MSAId/". $newFileName;
+            
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $stmt = $this->conn->prepare("INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId) VALUES (?, ?, ?, 1)");
                 if (!$stmt) {
                     $responses[] = ['error' => 'Failed to prepare statement'];
                     continue;
                 }
-
                 $stmt->bind_param('sii', $targetPath, $studentId, $assignmentId);
                 if ($stmt->execute()) {
                     $responses[] = ['success' => 'Image uploaded successfully', 'path' => $targetPath];
