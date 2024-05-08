@@ -76,64 +76,71 @@ class USER
       $this->Email = $result["Email"];
       $this->Type = $result["Type"];
       $this->PersonalImage = $result["PersonalImage"];
-      session_start();
-      $_SESSION["LoggedIn"] = true;
-      $_SESSION["Id"] = $result["Id"];
-      $_SESSION["MSAId"] = $result["MSAId"];
-      $_SESSION["Name"] = $result["Name"];
-      $_SESSION["Email"] = $result["Email"];
-      $_SESSION["Type"] = $result["Type"];
-      $_SESSION["PersonalImage"] = $result["PersonalImage"];
       return $result;
     }
   }
 
   public function uploadImage($file, $userID, $id)
   {
+    // Max file size: 5MB
     $maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
-    // $file = $_FILES["personalImage"];
+
+    // Extract file information
     $fileName = $file["name"];
     $fileSize = $file["size"];
     $fileTmpName = $file["tmp_name"];
     $fileType = $file["type"];
 
+    // Allowed file types
     $allowedTypes = array("image/jpeg", "image/png", "image/gif");
+
+    // Validate file type
     if (!in_array($fileType, $allowedTypes)) {
-      echo "Error: File is not an image.";
-      // exit();
-      return;
+      return "Error: File is not an image.";
     }
 
-    // Check file size
+    // Validate file size
     if ($fileSize > $maxFileSize) {
-      echo "Error: File size exceeds the maximum limit (5MB).";
-      // exit();
-      return;
+      return "Error: File size exceeds the maximum limit (5MB).";
     }
-    if (!is_dir("../uploads")) {
-      mkdir("../uploads", 0777);
-    }
+
+    // Directory for uploads
     $targetDir = "../uploads/" . $userID;
 
-    // Check if the directory doesn't already exist
-    if (!is_dir($targetDir))
-      mkdir($targetDir, 0777);
+    // Create uploads directory if it doesn't exist
+    if (!is_dir($targetDir)) {
+      if (!mkdir($targetDir, 0777, true)) {
+        return "Error: Failed to create directory.";
+      }
+    }
 
-    $extension = explode(".", $file["name"]);
-    $extension = $extension[count($extension) - 1];
-    $targetFile = $targetDir . "/" . "PersonalImage" . "." . $extension;
+    // Delete existing file with the name "PersonalImage"
+    $existingFiles = glob($targetDir . "/PersonalImage.*");
+    foreach ($existingFiles as $existingFile) {
+      unlink($existingFile);
+    }
 
+    // Generate unique filename
+    $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+    $targetFile = $targetDir . "/PersonalImage." . $extension;
+
+    // Move uploaded file to target directory
     if (move_uploaded_file($fileTmpName, $targetFile)) {
-      $query = "Update users set personalImage =:target where Id =:selected;";
+      // Update database with file path
+      $query = "UPDATE users SET personalImage = :target WHERE Id = :selected;";
       $stmt = $this->pdo->prepare($query);
       $stmt->bindParam(":target", $targetFile);
       $stmt->bindParam(":selected", $id);
-      $stmt->execute();
-      echo "DONE";
+      if ($stmt->execute()) {
+        return $targetFile;
+      } else {
+        return "Error: Database update failed.";
+      }
     } else {
-      echo "Sorry, there was an error uploading your file.";
+      return "Error: Failed to move uploaded file.";
     }
   }
+
   public function getMSAId()
   {
     return $this->MSAId;
