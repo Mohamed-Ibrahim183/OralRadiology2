@@ -1,5 +1,9 @@
 <?php
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
+header("Access-Control-Allow-Methods: *");
+
 // FIRST OF ALL
 require_once('./User.class.php');
 require_once('./DataBase.class.php');
@@ -27,6 +31,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $data = $user->Login($_POST["MSAId"], $_POST["Password"]);
       if ($data)
         echo json_encode($data);
+    }
+    if ($last === "UpdateImage") {
+      // echo "update image";
+      // print_r($_FILES);
+      // print_r($_POST);
+      echo $user->uploadImage($_FILES["Profile"], $_POST["MSAId"], $_POST["Id"]);
     }
     die();
   case "GET":
