@@ -100,6 +100,16 @@ class GROUP
     return json_encode($final);
   }
 
+
+  public function getGroupsNames()
+  {
+    $query = "Select * from groups";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->execute();
+    $GroupsNames = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $GroupsNames;
+  }
+
   public function Delete($postKeys)
   {
     // Get all Slot IDs associated with the Group ID

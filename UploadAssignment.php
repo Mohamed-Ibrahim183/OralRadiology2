@@ -4,7 +4,7 @@ require 'Assignment.class.php';
 require 'User.class.php';
 require_once('./DataBase.class.php');
 
-$assignment = new Assignment($conn);  
+$assignment = new Assignment($conn);
 
 $userId = isset($_POST['userId']) ? intval($_POST['userId']) : null;
 $assignmentId = isset($_POST['assignmentId']) ? intval($_POST['assignmentId']) : null;
@@ -16,18 +16,17 @@ if (!$userId || !$assignmentId) {
 
 $assignmentInfo = $assignment->fetchAssignment($assignmentId);
 $maxImages = $assignmentInfo['maxLimitImages'] ?? 0;
-$Name= $assignmentInfo['Name'] ?? 0;
+$Name = $assignmentInfo['Name'] ?? 0;
 
 $db = new DATABASE();
 $pdo = $db->createConnection("oralradiology");
 $user = new USER($pdo);
 
-$monem= $user->getUser($userId,'Id');
-$MSAId=$monem['MSAId']?? 0;
+$monem = $user->getUser($userId, 'Id');
+$MSAId = $monem['MSAId'] ?? 0;
 
 
 // Process file uploads
 $files = $_FILES['images'];
-$response = $assignment->uploadImages($files, $assignmentId, $userId, $maxImages,$Name ,$MSAId);
+$response = $assignment->uploadImages($files, $assignmentId, $userId, $maxImages, $Name, $MSAId);
 echo json_encode($response);
-?>

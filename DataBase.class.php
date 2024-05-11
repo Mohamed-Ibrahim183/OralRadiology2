@@ -18,4 +18,22 @@ class DATABASE
       return null;
     }
   }
+  public function Connection2()
+  {
+
+    // Database connection parameters
+    $serverName = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "oralradiology";
+
+    // Create connection
+    $conn = new mysqli($serverName, $username, $password, $dbname);
+
+    // Check connection
+    if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+    }
+    return $conn;
+  }
 }

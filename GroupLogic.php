@@ -31,5 +31,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     if ($last === "Groups") {
       print_r($group->getAll());
     }
+    if ($last === "getGroupsNames") {
+      $data = $group->getGroupsNames();
+      echo $data !== null ? json_encode($data) : "error";
+      // $data = $group->getAll();
+      // echo $data !== null ? $data : json_encode(array('Error' => 'Groups Error'));
+    }
     die();
 }
