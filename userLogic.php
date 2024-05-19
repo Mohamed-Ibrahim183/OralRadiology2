@@ -33,9 +33,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($data);
     }
     if ($last === "UpdateImage") {
-      // echo "update image";
-      // print_r($_FILES);
-      // print_r($_POST);
       echo $user->uploadImage($_FILES["Profile"], $_POST["MSAId"], $_POST["Id"]);
     }
     die();
@@ -54,5 +51,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     }
     if ($path[count($path) - 2] === "Users") {
       echo json_encode($user->getSpecificType($last));
+    }
+    if ($path[count($path) - 2] === "UserAssignments" && is_numeric($last)) {
     }
 }
