@@ -139,4 +139,29 @@ class GROUP
     $stmt->bindParam(":selected", $postKeys["id"]);
     $stmt->execute();
   }
+
+  public function insertUserInGroup($userId, $GroupName)
+  {
+    // Get Group Name
+    $query = "SELECT Id from groups where Name =:selected";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $GroupName);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+
+    // DELETE Old Record
+    $query = "DELETE from usersingroups Where userId =:selected";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $userId);
+    $stmt->execute();
+
+
+    $query = "INSERT into usersingroups (userId, GroupId) Values (:userId, :GroupId)";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":userId", $userId);
+    $stmt->bindParam(":GroupId", $result["Id"]);
+    $stmt->execute();
+  }
 }

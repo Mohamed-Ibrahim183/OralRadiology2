@@ -26,6 +26,13 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $group->Delete($_POST);
       echo "DELETED";
     }
+    if ($last === "Changes") {
+      print_r($_POST);
+      foreach ($_POST as $userID => $GroupName) {
+        // echo $userID . ": " . $GroupName . "\n";
+        $group->insertUserInGroup($userID, $GroupName);
+      }
+    }
     die();
   case "GET":
     if ($last === "Groups") {
