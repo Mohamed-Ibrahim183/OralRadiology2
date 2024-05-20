@@ -14,7 +14,7 @@ if (!$pdo) {
     exit;
 }
 
-$assignmentClass = new Assignment($conn);
+$assignmentClass = new Assignment($pdo); // Should pass the correct connection variable
 $userClass = new USER($pdo);
 
 // Fetch parameters from URL
@@ -42,16 +42,11 @@ try {
         $userData = $userClass->getUser($submission['StudentId'], 'Id');
         if ($userData) {
             $userData['submitTime'] = $submission['submitTime'];
-            // Fetch images for this student's submission
-            $stmt = $pdo->prepare("SELECT Path FROM assignmentimages WHERE StudentID = :studentId AND AssignmentId = :assignmentId");
-            $stmt->execute(['studentId' => $submission['StudentId'], 'assignmentId' => $assignmentId]);
-            $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            $userData['images'] = $images;
             $responseData[] = $userData;
         }
     }
 
-    echo json_encode(['images' => $responseData]);
+    echo json_encode($responseData); // Corrected the response format
 } catch (Exception $e) {
     echo json_encode(['error' => $e->getMessage()]);
     http_response_code(500); // Internal Server Error

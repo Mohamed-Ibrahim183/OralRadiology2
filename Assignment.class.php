@@ -64,6 +64,19 @@ class Assignment
     {
         $uploadedFiles = 0;
         $responses = [];
+    
+        // Create submission record only once
+        $submitTime = date("Y-m-d H:i:s");
+        $stmtSubmissions = $this->conn->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (?, ?, ?)");
+        if (!$stmtSubmissions) {
+            return ['error' => 'Failed to prepare submission statement: ' . $this->conn->error];
+        }
+        $stmtSubmissions->bind_param('iis', $assignmentId, $studentId, $submitTime);
+        if (!$stmtSubmissions->execute()) {
+            return ['error' => 'Failed to insert submission record: ' . $stmtSubmissions->error];
+        }
+        $stmtSubmissions->close();
+    
         foreach ($files['tmp_name'] as $key => $tmpName) {
             if ($uploadedFiles >= $maxImages) {
                 $responses[] = ['error' => 'Image limit exceeded'];
@@ -91,21 +104,8 @@ class Assignment
                 }
                 $stmt->bind_param('sii', $targetPath, $studentId, $assignmentId);
                 if ($stmt->execute()) {
-                    // Insert into submissions table
-                    $submitTime = date("Y-m-d H:i:s");
-                    $stmtSubmissions = $this->conn->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (?, ?, ?)");
-                    if (!$stmtSubmissions) {
-                        $responses[] = ['error' => 'Failed to prepare submission statement'];
-                        continue;
-                    }
-                    $stmtSubmissions->bind_param('iis', $assignmentId, $studentId, $submitTime);
-                    if ($stmtSubmissions->execute()) {
-                        $responses[] = ['success' => 'Image uploaded successfully', 'path' => $targetPath];
-                        $uploadedFiles++;
-                    } else {
-                        $responses[] = ['error' => 'Failed to insert submission record: ' . $stmtSubmissions->error];
-                    }
-                    $stmtSubmissions->close();
+                    $responses[] = ['success' => 'Image uploaded successfully', 'path' => $targetPath];
+                    $uploadedFiles++;
                 } else {
                     $responses[] = ['error' => 'Failed to insert image record: ' . $stmt->error];
                 }
@@ -116,6 +116,7 @@ class Assignment
         }
         return $responses;
     }
+    
     
     public function InsertAssignmentGroup($data)
     {
@@ -188,24 +189,17 @@ class Assignment
     }
 
     public function getSubmissionsByAssignmentId($assignmentId)
-{
-    $stmt = $this->conn->prepare("SELECT StudentId, submitTime FROM submissions WHERE assignmentId = ?");
-    if (!$stmt) {
-        echo "Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error;
-        return false;
-    }
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
+        if (!$stmt) {
+            echo "Prepare failed: (" . $this->conn->errorCode() . ") " . $this->conn->errorInfo()[2];
+            return false;
+        }
 
-    $stmt->bind_param("i", $assignmentId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $submissions = [];
-    while ($row = $result->fetch_assoc()) {
-        $submissions[] = $row;
+        $stmt->bindValue(':assignmentId', $assignmentId, PDO::PARAM_INT);
+        $stmt->execute();
+        $submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $submissions;
     }
-    
-    $stmt->close();
-    return $submissions;
-}
 
 }
