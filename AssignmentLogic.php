@@ -75,6 +75,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           $userData = $userClass->getUser($submission['StudentId'], 'Id');
           if ($userData) {
             $userData['submitTime'] = $submission['submitTime'];
+            $userData['Grade'] = $submission['Grade'];
+            $userData['Comment'] = $submission['Comment'];
             $responseData[] = $userData;
           }
         }

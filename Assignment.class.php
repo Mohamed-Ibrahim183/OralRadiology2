@@ -225,4 +225,25 @@ class Assignment
 
         return $images;
     }
+    public function AddAssignmentGradeAndCommentPDO($assignmentId, $studentId, $grade, $comment)
+    {
+        $stmt = $this->conn->prepare("UPDATE submissions SET Grade = ?, Comment = ? WHERE StudentId = ? AND assignmentId = ?");
+        if (!$stmt) {
+            echo "Prepare failed: (" . $this->conn->errorCode() . ") " . $this->conn->errorInfo()[2];
+            return false;
+        }
+    
+        $stmt->bindValue(1, $grade, PDO::PARAM_STR);
+        $stmt->bindValue(2, $comment, PDO::PARAM_STR);
+        $stmt->bindValue(3, $studentId, PDO::PARAM_INT);
+        $stmt->bindValue(4, $assignmentId, PDO::PARAM_INT);
+    
+        if (!$stmt->execute()) {
+            echo "Execute failed: (" . $stmt->errorCode() . ") " . $stmt->errorInfo()[2];
+            return false;
+        }
+    
+        $stmt->closeCursor();
+        return true;
+    }
 }
