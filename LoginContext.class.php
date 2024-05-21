@@ -1,4 +1,3 @@
-<!-- Navigator -->
 <?php
 
 require_once('LoginStrategy.php');

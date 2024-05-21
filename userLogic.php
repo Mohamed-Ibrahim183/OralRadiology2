@@ -35,8 +35,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
             $identifier = $_POST["identifier"];
             $password = $_POST["password"];
 
-          //  error_log("Identifier: $identifier");
-          //  error_log("Password: $password");
+            error_log("Identifier: $identifier");
+            error_log("Password: $password");
 
             // Determine if identifier is an email or MSA ID
             if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
