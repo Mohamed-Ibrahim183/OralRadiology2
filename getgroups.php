@@ -4,11 +4,10 @@
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Allow all origins (remove or modify this in production for security)
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "oralradiology";
+$servername = getenv('DB_SERVER');
+$username = getenv('DB_USER');
+$password = getenv('DB_PASSWORD');
+$dbname = getenv('DB_NAME');
 
 // Create connection to MySQL
 $conn = new mysqli($servername, $username, $password, $dbname);
