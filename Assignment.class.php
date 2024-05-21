@@ -201,36 +201,34 @@ class Assignment
         $submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $submissions;
     }
-    public function getAssignmentImages($studentId, $assignmentId)
-    {
-        // Prepare statement to fetch assignment images
-        $stmt = $this->conn->prepare("SELECT Id, Path, CategoryId, StudentID, AssignmentId, Grade FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
+    public function getAssignmentImages($studentId, $assignmentId) {
+        $stmt = $this->conn->prepare("SELECT Path FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
         if (!$stmt) {
-            return ['error' => 'Prepare failed: ' . $this->conn->error];
+            throw new Exception('Prepare failed: ' . $this->conn->errorInfo()[2]);
         }
-
-        // Bind parameters and execute the statement
-        $stmt->bind_param("ii", $studentId, $assignmentId);
-        $stmt->execute();
-
-        // Get result and fetch images
-        $result = $stmt->get_result();
+    
+        $stmt->bindValue(1, $studentId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $assignmentId, PDO::PARAM_INT);
+    
+        if (!$stmt->execute()) {
+            throw new Exception('Execute failed: ' . $stmt->errorInfo()[2]);
+        }
+    
         $images = [];
-        while ($row = $result->fetch_assoc()) {
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $images[] = $row;
         }
-
-        // Close statement
-        $stmt->close();
-
-        // Check if images are found
-        if (empty($images)) {
-            return ['error' => 'No images found for the provided studentId and assignmentId'];
-        }
-
-        // Return fetched images
+    
+        // Remove or comment out the next line if it calls stmt->close();
+        // $stmt->close();  // This line should be removed or commented out
+    
         return $images;
     }
+    
+    
+    
+    
+    
 }
 
-}
+
