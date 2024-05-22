@@ -64,7 +64,7 @@ class Assignment
     {
         $uploadedFiles = 0;
         $responses = [];
-    
+
         // Create submission record only once
         $submitTime = date("Y-m-d H:i:s");
         $stmtSubmissions = $this->conn->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (?, ?, ?)");
@@ -76,13 +76,13 @@ class Assignment
             return ['error' => 'Failed to insert submission record: ' . $stmtSubmissions->error];
         }
         $stmtSubmissions->close();
-    
+
         foreach ($files['tmp_name'] as $key => $tmpName) {
             if ($uploadedFiles >= $maxImages) {
                 $responses[] = ['error' => 'Image limit exceeded'];
                 break;
             }
-    
+
             $studentDirectory = "../uploads/$ASName";
             if (!file_exists($studentDirectory)) {
                 mkdir($studentDirectory, 0777, true);
@@ -92,10 +92,10 @@ class Assignment
                 mkdir($studentDirectory, 0777, true);
             }
             $numFiles = 1 + count(array_diff(scandir($studentDirectory), array('.', '..')));
-    
+
             $newFileName = "{$ASName}-student-{$MSAId}-Img{$numFiles}.jpg";
             $targetPath = "../uploads/$ASName/$MSAId/" . $newFileName;
-    
+
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $stmt = $this->conn->prepare("INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId) VALUES (?, ?, ?, 1)");
                 if (!$stmt) {
@@ -116,8 +116,8 @@ class Assignment
         }
         return $responses;
     }
-    
-    
+
+
     public function InsertAssignmentGroup($data)
     {
         foreach ($data as $value) {
@@ -201,34 +201,28 @@ class Assignment
         $submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $submissions;
     }
-    public function getAssignmentImages($studentId, $assignmentId) {
+    public function getAssignmentImages($studentId, $assignmentId)
+    {
         $stmt = $this->conn->prepare("SELECT Path FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
         if (!$stmt) {
             throw new Exception('Prepare failed: ' . $this->conn->errorInfo()[2]);
         }
-    
+
         $stmt->bindValue(1, $studentId, PDO::PARAM_INT);
         $stmt->bindValue(2, $assignmentId, PDO::PARAM_INT);
-    
+
         if (!$stmt->execute()) {
             throw new Exception('Execute failed: ' . $stmt->errorInfo()[2]);
         }
-    
+
         $images = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $images[] = $row;
         }
-    
+
         // Remove or comment out the next line if it calls stmt->close();
         // $stmt->close();  // This line should be removed or commented out
-    
+
         return $images;
     }
-    
-    
-    
-    
-    
 }
-
-
