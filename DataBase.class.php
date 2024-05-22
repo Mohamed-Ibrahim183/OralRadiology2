@@ -22,10 +22,10 @@ class DATABASE
   {
 
     // Database connection parameters
-    $servername = getenv('DB_SERVER');
-    $username = getenv('DB_USER');
-    $password = getenv('DB_PASSWORD');
-    $dbname = getenv('DB_NAME');
+    $serverName = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "oralradiology";
 
     // Create connection
     $conn = new mysqli($serverName, $username, $password, $dbname);
