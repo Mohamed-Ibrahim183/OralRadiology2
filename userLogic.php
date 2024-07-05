@@ -17,7 +17,6 @@ $pdo = $db->createConnection("oralradiology");
 $user = new USER($pdo);
 $path = explode("/", $_SERVER['REQUEST_URI']);
 $last = $path[count($path) - 1];
-session_start();
 
 // LOGIC
 switch ($_SERVER["REQUEST_METHOD"]) {
@@ -27,7 +26,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
             $lastID = $user->Insert($_POST, $tableColumns, "users", "");
             if (isset($_FILES["personalImage"])) {
                 $selectedUser = $user->getMSAId();
-                $user->uploadImage($_FILES["personalImage"], $selectedUser, $lastID);
+                $user->uploadImage($_FILES["personalImage"], "../uploads/{$selectedUser}", $lastID);
             }
         }
         if ($last === "Login") {
@@ -57,7 +56,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
             }
         }
         if ($last === "UpdateImage") {
-            echo $user->uploadImage($_FILES["Profile"], $_POST["MSAId"], $_POST["Id"]);
+            echo $user->uploadImage($_FILES["Profile"], "../uploads/{$_POST["MSAId"]}", $_POST["Id"]);
         }
         die();
     case "GET":
@@ -79,5 +78,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         if ($path[count($path) - 2] === "UserAssignments" && is_numeric($last)) {
             // Add logic for user assignments if needed
         }
+        if (str_starts_with($last, "Delete")) {
+            $user->deleteUser($_GET["userId"]);
+        }
+        die();
 }
-?>

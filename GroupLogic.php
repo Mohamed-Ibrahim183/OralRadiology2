@@ -41,8 +41,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     if ($last === "getGroupsNames") {
       $data = $group->getGroupsNames();
       echo $data !== null ? json_encode($data) : "error";
-      // $data = $group->getAll();
-      // echo $data !== null ? $data : json_encode(array('Error' => 'Groups Error'));
+    }
+    if ($path[count($path) - 2] === "UsersMails") {
+      $result = $group->getUsersInGroup($last);
+      echo json_encode($result);
     }
     die();
 }

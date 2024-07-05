@@ -1,9 +1,11 @@
 <?php
-require 'connection.php';
+// require 'connection.php';
 require 'Assignment.class.php';
 require 'User.class.php';
 require_once('./DataBase.class.php');
 
+$conn = new DATABASE();
+$conn = $conn->Connection2();
 $assignment = new Assignment($conn);
 
 $userId = isset($_POST['userId']) ? intval($_POST['userId']) : null;

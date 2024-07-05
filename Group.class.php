@@ -138,6 +138,8 @@ class GROUP
     $stmt = $this->pdo->prepare($query);
     $stmt->bindParam(":selected", $postKeys["id"]);
     $stmt->execute();
+
+    $stmt = null;
   }
 
   public function insertUserInGroup($userId, $GroupName)
@@ -163,5 +165,43 @@ class GROUP
     $stmt->bindParam(":userId", $userId);
     $stmt->bindParam(":GroupId", $result["Id"]);
     $stmt->execute();
+  }
+  public function getUserGroup($userID)
+  {
+    $query = "SELECT * FROM usersingroups WHERE userId=:selected";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $userID);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$result) {
+      return -1;
+    }
+
+    $groupId = $result["GroupId"];
+    $query = "SELECT * FROM groups WHERE Id=:selected";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $groupId);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result)
+      return $result;
+  }
+  public function getUsersInGroup($groupId)
+  {
+    $query = "SELECT * FROM usersingroups WHERE GroupId=:selected";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":selected", $groupId);
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $final = [];
+    foreach ($result as $row) {
+      $query = "SELECT * FROM users WHERE Id=:selected";
+      $stmt = $this->pdo->prepare($query);
+      $stmt->bindParam(":selected", $row["userId"]);
+      $stmt->execute();
+      $result2 = $stmt->fetch(PDO::FETCH_ASSOC);
+      array_push($final, $result2);
+    }
+    return $final;
   }
 }

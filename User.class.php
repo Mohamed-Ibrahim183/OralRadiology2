@@ -80,7 +80,7 @@ class USER
     }
   }
 
-  public function uploadImage($file, $userID, $id)
+  public function uploadImage($file, $targetDir, $id)
   {
     // Max file size: 5MB
     $maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
@@ -105,7 +105,7 @@ class USER
     }
 
     // Directory for uploads
-    $targetDir = "../uploads/" . $userID;
+    // $targetDir = "../uploads/" . $userID;
 
     // Create uploads directory if it doesn't exist
     if (!is_dir($targetDir)) {
@@ -195,11 +195,29 @@ class USER
 
   public function getSpecificType($type)
   {
-    $query = "Select * from users Where Type =:selected;";
+    require_once("./Group.class.php");
+    $group = new GROUP($this->pdo);
+    $query = "Select * from users Where Type=:selected;";
     $stmt = $this->pdo->prepare($query);
     $stmt->bindParam(":selected", $type);
     $stmt->execute();
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!$result)
+      return null;
+    foreach ($result as $key => $value) {
+      unset($result[$key]["Password"]);
+      $userGroup = $group->getUserGroup($value["Id"]);
+      if ($userGroup != -1 && $userGroup) {
+        $result[$key]["Group"] = $userGroup["Name"];
+      }
+    }
     return $result;
+  }
+  public function deleteUser($userId)
+  {
+    $query = "Delete from users Where Id=:id;";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":id", $userId);
+    $stmt->execute();
   }
 }

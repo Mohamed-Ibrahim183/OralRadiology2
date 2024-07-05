@@ -25,9 +25,15 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       die();
     }
     if ($last === "AssignmentGroup") {
-      // print_r($_POST);
       $res = $assignment->InsertAssignmentGroup($_POST);
       echo $res;
+    }
+    if ($last == "SubmitAssignment") {
+    }
+    if ($last === "addCategory") {
+      print_r($_POST);
+      $done = $assignment->addCategory($pdo, $_POST["Name"]);
+      echo $done ? "done" : "Error on adding the category";
     }
 
 
@@ -40,6 +46,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo $assignment->fetchAllAssignments();
       die();
     }
+    if ($last === "GetCategories") {
+      $cats = $assignment->getCategories($pdo);
+      if ($cats)
+        echo json_encode($cats);
+      die();
+    }
 
     if ($last === "AssignmentGroupsShow") {
 
@@ -47,43 +59,36 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo json_encode($res);
     }
     if (str_starts_with($last, "GetSubmissionAssignment")) {
+      // echo "not empty";
       $assignmentClass = new Assignment($pdo); // Should pass the correct connection variable
       $userClass = new USER($pdo);
 
       // Fetch parameters from URL
-      $assignmentId = isset($_GET['assignmentId']) ? (int)$_GET['assignmentId'] : null;
-      $userId = isset($_GET['userId']) ? (int)$_GET['userId'] : null;
-
-      if (!$assignmentId || !$userId) {
-        echo json_encode(['error' => 'Missing required parameters']);
-        http_response_code(400); // Bad request
+      if (!isset($_GET['assignmentId'])) {
+        echo json_encode(['error' => 'Missing required parameters (assignmentId)']);
         exit;
       }
+      $assignmentId = (int)$_GET['assignmentId'];
 
       try {
         // Fetch submissions data
         $submissions = $assignmentClass->getSubmissionsByAssignmentId($assignmentId);
-
         if (!$submissions) {
           echo json_encode(['error' => 'No submissions found']);
-          http_response_code(404); // Not found
           exit;
         }
 
         $responseData = [];
         foreach ($submissions as $submission) {
           $userData = $userClass->getUser($submission['StudentId'], 'Id');
-          if ($userData) {
-            $userData['submitTime'] = $submission['submitTime'];
-            $userData['Grade'] = $submission['Grade'];
-            $userData['Comment'] = $submission['Comment'];
+          if ($userData)
             $responseData[] = $userData;
-          }
         }
 
         echo json_encode($responseData); // Corrected the response format
       } catch (Exception $e) {
         echo json_encode(['error' => $e->getMessage()]);
+
         http_response_code(500); // Internal Server Error
       }
       die();
