@@ -11,6 +11,7 @@ $db = new DATABASE();
 $conn = $db->Connection2();
 $pdo = $db->createConnection();
 $assignment = new Assignment($conn);
+
 // $path = explode('/', explode("?", $_SERVER['REQUEST_URI'], 2)[0]);
 // $last = end($path);
 $path = explode("/", $_SERVER['REQUEST_URI']);
@@ -75,6 +76,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       if ($cats)
         echo json_encode($cats);
       die();
+    }
+    if ($last === "submissionsStatus") {
+      // for professor dashboard (Chart)
+      $done = $assignment->getSubmissionStatus($pdo);
+      echo $done ? json_encode($done) : "Error";
+      exit();
     }
 
     if ($last === "AssignmentGroupsShow") {

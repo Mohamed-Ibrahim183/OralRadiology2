@@ -258,6 +258,23 @@ class Assignment
 		}
 	}
 
+	public function getSubmissionStatus($pdo)
+	{
+		$query = "SELECT * from assignments;";
+		$stmt = $pdo->prepare($query);
+		$stmt->execute();
+		$Assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		if (!$Assignments) return false;
+		foreach ($Assignments as $key => $value) {
+			$query = "SELECT * from submissions Where assignmentId=:selected;";
+			$stmt = $pdo->prepare($query);
+			$stmt->bindParam(":selected", $value["Id"]);
+			$stmt->execute();
+			$assSubmission = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			$Assignments[$key]["Submitted"] = $assSubmission ?  count($assSubmission) : 0;
+		}
+		return $Assignments;
+	}
 
 	public function AssignmentGroupsShow($pdo)
 	{

@@ -58,6 +58,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         if ($last === "UpdateImage") {
             echo $user->uploadImage($_FILES["Profile"], "../uploads/{$_POST["MSAId"]}", $_POST["Id"]);
         }
+        if ($last === "GetTotalUsersType") {
+
+            $done = $user->getTotalUsers($_POST["Type"]);
+            echo ($done[0]["user_count"]);
+        }
         die();
     case "GET":
         if ($path[count($path) - 2] === "getUserID") {

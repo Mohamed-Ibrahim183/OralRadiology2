@@ -60,7 +60,15 @@ class USER
     }
     return -1;
   }
-
+  public function getTotalUsers($usersType)
+  {
+    $query = "SELECT Type, COUNT(*) AS user_count FROM users WHERE Type=:Selected;";
+    $stmt = $this->pdo->prepare($query);
+    $stmt->bindParam(":Selected", $usersType);
+    $stmt->execute();
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return ($result);
+  }
   public function getUser($value, $key = "Id")
   {
     $query = "Select * from users Where $key =:selected;";
