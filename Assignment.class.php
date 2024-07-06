@@ -176,6 +176,14 @@ class Assignment
 			return true;
 		}
 	}
+	public function DeleteAssignment($pdo, $assignmentId)
+	{
+		$query = "DELETE from assignments where Id=:Selected;";
+		$stmt = $pdo->prepare($query);
+		$stmt->bindParam(':Selected', $assignmentId);
+		$stmt->execute();
+		return true;
+	}
 	function countFilesInFolder($folderPath)
 	{
 		// chatGPT

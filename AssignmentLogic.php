@@ -58,6 +58,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"]);
       echo $done ? "done" : "Error on adding the submission";
     }
+    if ($last === "DeleteAssignment") {
+      $done = $assignment->deleteAssignment($pdo, $_POST["assignmentId"]);
+      echo $done ? "done" : "Error on deleting the assignment";
+    }
 
 
 
