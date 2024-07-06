@@ -361,4 +361,32 @@ class Assignment
 		$stmt->closeCursor();
 		return true;
 	}
+	public function fetchAllsubmissions()
+	{
+		$query = "SELECT * FROM submissions";
+		$result = $this->conn->query($query);
+
+		if ($result === false) {
+			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
+		}
+
+		$submissions = [];
+		while ($row = $result->fetch_assoc()) {
+			$submissions[] = $row;
+		}
+		return json_encode($submissions);
+	}
+	public function Chart($assignmentId, $studentId) {
+		$query = "SELECT SUM(Grade) as TotalGrade FROM assignmentimages WHERE AssignmentId = $assignmentId AND StudentID = $studentId";
+		$result = $this->conn->query($query);
+	
+		if ($result === false) {
+			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
+		}
+	
+		$row = $result->fetch_assoc();
+		$totalGrade = $row['TotalGrade'];
+	
+		return $totalGrade;
+	}
 }
