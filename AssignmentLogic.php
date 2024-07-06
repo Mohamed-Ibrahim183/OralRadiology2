@@ -35,13 +35,33 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $done = $assignment->addCategory($pdo, $_POST["Name"]);
       echo $done ? "done" : "Error on adding the category";
     }
+    if ($last === "UploadAssignmentImage") {
+      $assignmentId = $_POST['assignmentId'];
+      $studentId = $_POST['StudentId'];
+      $category = json_decode($_POST['category'], true);
+
+      $image = [
+        "name" => $_FILES['file']['name'],
+        "size" => $_FILES['file']['size'],
+        "tmp_name" => $_FILES['file']['tmp_name'],
+        "type" => $_FILES['file']['type']
+      ];
+      $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, 1);
+      if ($result != "Done") {
+        echo json_encode(["msg" => $result]);
+        exit;
+      }
+      echo json_encode(["msg" => "All files uploaded successfully."]);
+      die();
+    }
+    if ($last === "newSubmission") {
+      $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"]);
+      echo $done ? "done" : "Error on adding the submission";
+    }
 
 
-    die();
 
   case 'GET':
-    // print_r($_GET);
-    // echo $last;
     if ($last === "GetAll") {
       echo $assignment->fetchAllAssignments();
       die();

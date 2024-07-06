@@ -176,6 +176,81 @@ class Assignment
 			return true;
 		}
 	}
+	function countFilesInFolder($folderPath)
+	{
+		// chatGPT
+		// Check if the directory exists 
+		if (!is_dir($folderPath)) {
+			return 0; // Return 0 if the folder does not exist
+		}
+
+		// Get an array of all files and directories in the folder
+		$files = scandir($folderPath);
+
+		// Filter out the current (.) and parent (..) directories
+		$files = array_diff($files, array('.', '..'));
+
+		// Count the number of items in the array
+		$fileCount = count($files);
+
+		return $fileCount;
+	}
+	public function addNewSubmission($pdo, $student, $assignment)
+	{
+		$query = "INSERT into submissions (StudentId, assignmentId) Values (:student, :assignment);";
+		$stmt = $pdo->prepare($query);
+		$stmt->bindParam(':student', $student);
+		$stmt->bindParam(':assignment', $assignment);
+		$stmt->execute();
+		return true;
+	}
+	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category)
+	{
+		$fileName = $image["name"];
+		$fileSize = $image["size"];
+		$fileTmpName = $image["tmp_name"];
+		$fileType = $image["type"];
+
+		// Allowed file types
+		$allowedTypes = array("image/jpeg", "image/png", "image/gif");
+
+		// Validate file type
+		if (!in_array($fileType, $allowedTypes)) {
+			return "Error: File is not an image.";
+		}
+		$targetDir = "../uploads/Assignments/" . $assignmentId . "/" . $studentId;
+		if (!is_dir($targetDir)) {
+			if (!mkdir($targetDir, 0777, true)) {
+				return "Error: Failed to create directory.";
+			}
+		}
+		$countFiles = $this->countFilesInFolder($targetDir);
+		// Generate unique filename
+		$extension = pathinfo($fileName, PATHINFO_EXTENSION);
+		$targetFile = $targetDir . "/" . $countFiles . "." . $extension;
+
+		// Move uploaded file to target directory
+		if (move_uploaded_file($fileTmpName, $targetFile)) {
+			// Update database with file path
+			$query = "INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId) 
+										VALUES (:path, :student, :assignment, :category)";
+			$stmt = $pdo->prepare($query);
+			$stmt->bindParam(":path", $targetFile);
+			$stmt->bindParam(":student", $studentId);
+			$stmt->bindParam(":assignment", $assignmentId);
+			$stmt->bindParam(":category", $category);
+
+			if ($stmt->execute()) {
+				return "Done";
+			} else {
+				return "Error: Database update failed.";
+			}
+		} else {
+			return "Error: Failed to move uploaded file.";
+		}
+	}
+
+
 	public function AssignmentGroupsShow($pdo)
 	{
 		$query = "Select * from GroupsAssignments";
