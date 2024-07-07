@@ -63,6 +63,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $done = $assignment->deleteAssignment($pdo, $_POST["assignmentId"]);
       echo $done ? "done" : "Error on deleting the assignment";
     }
+    if ($last === "EvaluateImage") {
+      // $done = $assignment->evaluateImage($pdo, $_POST["assignmentId"], $_POST
+      $done = $assignment->evaluateImage($pdo, $_POST["ImageId"], $_POST["Grade"]);
+      echo $done ? "Image Evaluated" : "Error on evaluating the image";
+    }
 
 
 
@@ -73,64 +78,64 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     }
     if ($last === "GetSubmission") {
       error_log("Processing GetSubmission request");
-  
+
       $userId = $_GET['userId'] ?? null;
-  
+
       if (!$userId) {
-          error_log("User ID is missing");
-          echo json_encode(['error' => 'No user ID provided']);
-          die();
+        error_log("User ID is missing");
+        echo json_encode(['error' => 'No user ID provided']);
+        die();
       } else {
-          error_log("User ID: $userId");
+        error_log("User ID: $userId");
       }
-  
+
       $query = "SELECT assignmentId FROM submissions WHERE StudentId = $userId";
       $result = $this->conn->query($query);
-  
+
       if ($result === false) {
-          error_log("Database query failed: " . $this->conn->error);
-          echo json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
-          die();
+        error_log("Database query failed: " . $this->conn->error);
+        echo json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
+        die();
       } else {
-          error_log("Database query succeeded");
+        error_log("Database query succeeded");
       }
-  
+
       $assignments = [];
       while ($row = $result->fetch_assoc()) {
-          $assignmentId = $row['assignmentId'];
-          error_log("Fetched assignmentId: $assignmentId");
-  
-          // Fetch assignment name
-          $stmt = $this->conn->prepare("SELECT Name FROM assignments WHERE Id = ?");
-          $stmt->bind_param("i", $assignmentId);
-          $stmt->execute();
-          $nameResult = $stmt->get_result();
-          if ($nameResult === false) {
-              error_log("Failed to fetch assignment name: " . $this->conn->error);
-              echo json_encode(['error' => "Failed to fetch assignment name: " . $this->conn->error]);
-              die();
-          }
-          $nameRow = $nameResult->fetch_assoc();
-          $assignmentName = $nameRow['Name'];
-          error_log("Fetched assignmentName: $assignmentName");
-  
-          // Get total grade from Chart function
-          $totalGrade = $assignment->Chart($assignmentId, $userId);
-          error_log("Fetched totalGrade: $totalGrade");
-  
-          $assignments[] = [
-              'assignmentId' => $assignmentId,
-              'assignmentName' => $assignmentName,
-              'totalGrade' => $totalGrade
-          ];
+        $assignmentId = $row['assignmentId'];
+        error_log("Fetched assignmentId: $assignmentId");
+
+        // Fetch assignment name
+        $stmt = $this->conn->prepare("SELECT Name FROM assignments WHERE Id = ?");
+        $stmt->bind_param("i", $assignmentId);
+        $stmt->execute();
+        $nameResult = $stmt->get_result();
+        if ($nameResult === false) {
+          error_log("Failed to fetch assignment name: " . $this->conn->error);
+          echo json_encode(['error' => "Failed to fetch assignment name: " . $this->conn->error]);
+          die();
+        }
+        $nameRow = $nameResult->fetch_assoc();
+        $assignmentName = $nameRow['Name'];
+        error_log("Fetched assignmentName: $assignmentName");
+
+        // Get total grade from Chart function
+        $totalGrade = $assignment->Chart($assignmentId, $userId);
+        error_log("Fetched totalGrade: $totalGrade");
+
+        $assignments[] = [
+          'assignmentId' => $assignmentId,
+          'assignmentName' => $assignmentName,
+          'totalGrade' => $totalGrade
+        ];
       }
-  
+
       echo json_encode(['assignments' => $assignments]);
       die();
-     }
-  
-   
-     if ($last === "GetCategories") {
+    }
+
+
+    if ($last === "GetCategories") {
       $cats = $assignment->getCategories($pdo);
       if ($cats)
         echo json_encode($cats);

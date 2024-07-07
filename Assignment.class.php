@@ -302,6 +302,18 @@ class Assignment
 		}
 		return $final;
 	}
+	public function evaluateImage($pdo, $imageId, $grade)
+	{
+		$grade = $grade > 100 ? 100 : $grade;
+		$grade = $grade < 0 ? 0 : $grade;
+
+		$query = "UPDATE assignmentimages set Grade=:Grade Where Id=:Selected";
+		$stmt = $pdo->prepare($query);
+		$stmt->bindParam(":Selected", $imageId);
+		$stmt->bindParam(":Grade", $grade);
+		$stmt->execute();
+		return true;
+	}
 
 	public function getSubmissionsByAssignmentId($assignmentId)
 	{
@@ -318,7 +330,7 @@ class Assignment
 	}
 	public function getAssignmentImages($studentId, $assignmentId)
 	{
-		$stmt = $this->conn->prepare("SELECT Path FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
+		$stmt = $this->conn->prepare("SELECT * FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
 		if (!$stmt) {
 			throw new Exception('Prepare failed: ' . $this->conn->errorInfo()[2]);
 		}
@@ -376,17 +388,18 @@ class Assignment
 		}
 		return json_encode($submissions);
 	}
-	public function Chart($assignmentId, $studentId) {
+	public function Chart($assignmentId, $studentId)
+	{
 		$query = "SELECT SUM(Grade) as TotalGrade FROM assignmentimages WHERE AssignmentId = $assignmentId AND StudentID = $studentId";
 		$result = $this->conn->query($query);
-	
+
 		if ($result === false) {
 			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
 		}
-	
+
 		$row = $result->fetch_assoc();
 		$totalGrade = $row['TotalGrade'];
-	
+
 		return $totalGrade;
 	}
 }
