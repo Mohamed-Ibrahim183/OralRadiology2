@@ -317,17 +317,43 @@ class Assignment
 
 	public function getSubmissionsByAssignmentId($assignmentId)
 	{
+		// Prepare the initial statement to get submissions
 		$stmt = $this->conn->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
 		if (!$stmt) {
 			echo "Prepare failed: (" . $this->conn->errorCode() . ") " . $this->conn->errorInfo()[2];
 			return false;
 		}
 
+		// Bind the assignment ID and execute the statement
 		$stmt->bindValue(':assignmentId', $assignmentId, PDO::PARAM_INT);
 		$stmt->execute();
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		// // Iterate over the submissions to fetch student images and calculate grades
+		// foreach ($submissions as $key => $value) {
+		// 	// foreach ($submissions as &$submission) {
+		// 	$studentId = $submissions[$key]["StudentId"];
+
+		// 	// Prepare the statement to get assignment images for the current student
+		// 	$stmtImages = $this->conn->prepare("SELECT * FROM assignmentimages WHERE assignmentId = :assignmentId AND StudentId = :studentId");
+		// 	$stmtImages->bindValue(':assignmentId', $assignmentId, PDO::PARAM_INT);
+		// 	$stmtImages->bindValue(':studentId', $studentId, PDO::PARAM_INT);
+		// 	$stmtImages->execute();
+		// 	$studentImages = $stmtImages->fetchAll(PDO::FETCH_ASSOC);
+		// 	// print_r($studentImages);
+		// 	// Calculate the total grade for the current student
+		// 	$totalGrade = 1;
+		// 	foreach ($studentImages as $image) {
+		// 		$totalGrade += $image["Grade"];
+		// 	}
+
+		// 	// Add the calculated grade to the submission
+		// 	$submissions[$key]["Grade"] = $totalGrade;
+		// }
+
 		return $submissions;
 	}
+
 	public function getAssignmentImages($studentId, $assignmentId)
 	{
 		$stmt = $this->conn->prepare("SELECT * FROM assignmentimages WHERE StudentID = ? AND AssignmentId = ?");
