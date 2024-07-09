@@ -25,11 +25,13 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
       die();
     }
+    if ($last === "DeleteAssignment") {
+      $done = $assignment->deleteAssignment($pdo, $_POST["assignmentId"]);
+      echo $done ? "done" : "Error on deleting the assignment";
+    }
     if ($last === "AssignmentGroup") {
       $res = $assignment->InsertAssignmentGroup($_POST);
       echo $res;
-    }
-    if ($last == "SubmitAssignment") {
     }
     if ($last === "addCategory") {
       print_r($_POST);
@@ -58,10 +60,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     if ($last === "newSubmission") {
       $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"]);
       echo $done ? "done" : "Error on adding the submission";
-    }
-    if ($last === "DeleteAssignment") {
-      $done = $assignment->deleteAssignment($pdo, $_POST["assignmentId"]);
-      echo $done ? "done" : "Error on deleting the assignment";
     }
     if ($last === "EvaluateImage") {
       // $done = $assignment->evaluateImage($pdo, $_POST["assignmentId"], $_POST
@@ -133,15 +131,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo json_encode(['assignments' => $assignments]);
       die();
     }
-
-
     if ($last === "GetCategories") {
       $cats = $assignment->getCategories($pdo);
       if ($cats)
         echo json_encode($cats);
       die();
     }
-
     if ($last === "GetCategories") {
       $cats = $assignment->getCategories($pdo);
       if ($cats)
@@ -154,7 +149,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo $done ? json_encode($done) : "Error";
       exit();
     }
-
     if ($last === "AssignmentGroupsShow") {
 
       $res = $assignment->AssignmentGroupsShow($pdo);
@@ -225,6 +219,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
       die();
     }
+    // change to end point name search on it in front end // Soltan
     if (isset($_GET["assignmentId"])) {
       if (trim($_GET["assignmentId"]) !== "") {
         $assignmentData = $assignment->fetchAssignment($_GET["assignmentId"]);

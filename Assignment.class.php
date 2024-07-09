@@ -399,7 +399,7 @@ class Assignment
 		$stmt->closeCursor();
 		return true;
 	}
-	public function fetchAllsubmissions()
+	public function fetchAllSubmissions()
 	{
 		$query = "SELECT * FROM submissions";
 		$result = $this->conn->query($query);
