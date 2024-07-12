@@ -39,6 +39,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo $done ? "done" : "Error on adding the category";
     }
     if ($last === "UploadAssignmentImage") {
+      print_r($_POST);
       $assignmentId = $_POST['assignmentId'];
       $studentId = $_POST['StudentId'];
       $category = json_decode($_POST['category'], true);
@@ -49,7 +50,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         "tmp_name" => $_FILES['file']['tmp_name'],
         "type" => $_FILES['file']['type']
       ];
-      $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, 1);
+      $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $_POST["category"], $_POST["submission"]); // fix the cat
       if ($result != "Done") {
         echo json_encode(["msg" => $result]);
         exit;
@@ -59,7 +60,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
     }
     if ($last === "newSubmission") {
       $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"]);
-      echo $done ? "done" : "Error on adding the submission";
+      echo $done ? $pdo->lastInsertId() : "Error on adding the submission";
     }
     if ($last === "EvaluateImage") {
       // $done = $assignment->evaluateImage($pdo, $_POST["assignmentId"], $_POST
@@ -155,7 +156,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo json_encode($res);
     }
     if (str_starts_with($last, "GetSubmissionAssignment")) {
-      // echo "not empty";
       $assignmentClass = new Assignment($pdo); // Should pass the correct connection variable
       $userClass = new USER($pdo);
 
@@ -177,6 +177,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $responseData = [];
         foreach ($submissions as $submission) {
           $userData = $userClass->getUser($submission['StudentId'], 'Id');
+          $userData["submission"] = $submission["Id"];
+          $userData["Grade"] = $assignment->getGrade($pdo, $submission["Id"]);
+          $userData["submitTime"] = $submission["submitTime"];
           if ($userData)
             $responseData[] = $userData;
         }
@@ -189,20 +192,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
       die();
     }
+
     if (str_starts_with($last, "FetchAssignmentImages")) {
-      $assignment = new Assignment($pdo);
-
-      $studentId = isset($_GET['studentId']) ? (int)$_GET['studentId'] : null;
-      $assignmentId = isset($_GET['assignmentId'])  ? (int)$_GET['assignmentId'] : null;
-
-      if (!$studentId || !$assignmentId) {
-        echo json_encode(['error' => 'Missing required parameters']);
-        http_response_code(400); // Bad request
-        exit;
-      }
 
       try {
-        $images = $assignment->getAssignmentImages($studentId, $assignmentId);
+        $images = $assignment->getAssignmentImages($pdo, $_GET["submission"]);
         if ($images === false) {
           throw new Exception("Failed to fetch images.");
         }
@@ -219,8 +213,52 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       }
       die();
     }
-    // change to end point name search on it in front end // Soltan
-    if (isset($_GET["assignmentId"])) {
+    if (isset($_GET["Action"]) and $_GET["Action"] === "GetAssignmentsForUser") {
+      echo json_encode($assignment->getAssignmentForUser($pdo, $_GET["userId"]));
+    }
+    if (isset($_GET["Action"]) and $_GET["Action"] === "GetSubmissionForUserReport") {
+      $submissions = $assignment->GetSubmissionById($pdo, $_GET["StudentId"]);
+      foreach ($submissions as &$submission) {
+        // 1. set grade for the submission
+        if (!isset($submission["Id"]))
+          continue;
+
+        $submission["Grade"] = $assignment->getGrade($pdo, $submission["Id"]);
+        // print_r($submission);
+
+        // 2. get assignment Name for each submission
+        $query = "SELECT * from assignments where Id=:selectedAssignment;";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindParam(":selectedAssignment", $submission["assignmentId"]);
+        $stmt->execute();
+        $currentAssignment = $stmt->fetch(PDO::FETCH_ASSOC);
+        // print_r($currentAssignment);
+        $submission["assignmentName"] = $currentAssignment["Name"];
+
+        // 3. get images for each submission
+        $images = $assignment->getAssignmentImages($pdo, $submission["Id"]);
+        foreach ($images as &$image) {
+          $query = "SELECT Name from categories where Id=:selected;";
+          $stmt = $pdo->prepare($query);
+          $stmt->bindParam(":selected", $image["CategoryId"]);
+          $stmt->execute();
+          $category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+          $image["Category"] = $category["Name"];
+        }
+        $submission["images"] = $images;
+      }
+
+      echo json_encode($submissions);
+    }
+    if (isset($_GET["Action"]) and $_GET["Action"] === "GetSubmissionById") {
+      echo json_encode($assignment->GetSubmissionById($pdo, $_GET["StudentId"]));
+    }
+    if (isset($_GET["Action"]) and $_GET["Action"] === "GetSubmissionByUserAndAssignment") {
+      $res = $assignment->GetSubmissionByUserAndAssignment($pdo, $_GET["userId"], $_GET["assignmentId"]);
+      echo json_encode($res);
+    }
+    if (isset($_GET["Action"]) and $_GET["Action"] === "fetchAssignment") {
       if (trim($_GET["assignmentId"]) !== "") {
         $assignmentData = $assignment->fetchAssignment($_GET["assignmentId"]);
         echo $assignmentData !== null ? json_encode($assignmentData) : json_encode(["error" => "No data found for assignment ID $assignmentId"]);
