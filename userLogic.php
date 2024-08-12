@@ -83,8 +83,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         if ($path[count($path) - 2] === "UserAssignments" && is_numeric($last)) {
             // Add logic for user assignments if needed
         }
-        if (str_starts_with($last, "Delete")) {
+        if (str_starts_with($last, "Delete"))
             $user->deleteUser($_GET["userId"]);
-        }
+
         die();
 }

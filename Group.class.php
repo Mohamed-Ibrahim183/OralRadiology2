@@ -26,26 +26,23 @@ class GROUP
     foreach ($FrontData as $key => $value) {
       $condition = true;
       foreach (json_decode($value) as $subKey => $subValue) {
-        if (htmlspecialchars(trim($subValue)) ===  "") {
+        if (htmlspecialchars(trim($subValue)) ===  "")
           $condition = false;
-        }
       }
       if ($condition === true) {
         // 2. Save Each Slot
         $secondArray = json_decode($value, true);
-        $query = "INSERT into Slots (Day, Hour, Minute, DurationInMinutes, Room) VALUES (:day, :hour, :minute, :duration, :Room)";
+        $query = "INSERT into Slots (Day, StartTime, EndTime, Room) VALUES (:day, :Start, :End, :Room)";
         $stmt = $this->pdo->prepare($query);
 
         $day = htmlspecialchars(trim($secondArray["day"]));
-        $hour = htmlspecialchars(trim($secondArray["hour"]));
-        $duration = htmlspecialchars(trim($secondArray["duration"]));
-        $minutes = htmlspecialchars(trim($secondArray["minutes"]));
+        $Start = htmlspecialchars(trim($secondArray["Start"]));
+        $End = htmlspecialchars(trim($secondArray["End"]));
         $Room = htmlspecialchars(trim($secondArray["Room"]));
 
         $stmt->bindParam(":day", $day);
-        $stmt->bindParam(":hour", $hour);
-        $stmt->bindParam(":minute", $minutes);
-        $stmt->bindParam(":duration", $duration);
+        $stmt->bindParam(":Start", $Start);
+        $stmt->bindParam(":End", $End);
         $stmt->bindParam(":Room", $Room);
         $stmt->execute();
         $lastSlotID = $this->pdo->lastInsertId();
@@ -58,7 +55,7 @@ class GROUP
         $stmt->execute();
       }
     }
-    echo "DONE Insert Group";
+    echo "DONE Insert Group with name {$postKeys['Name']}";
   }
 
   public function getAll()
@@ -68,15 +65,14 @@ class GROUP
     $stmt->execute();
     $Groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (count($Groups) === 0)
-      return;
+      return [];
     $final = [];
     foreach ($Groups as $key => $value) {
-      //   (
-      //     [Id] => 3
-      //     [Name] => Group A
-      // )
-      $final[$value["Id"]] = [];
-      array_push($final[$value["Id"]], $value["Name"]);
+      $newGroupObject = [];
+      // $final[$value["Id"]] = [];
+      // array_push($final[$value["Id"]], $value["Name"]);
+      $newGroupObject = $value;
+      $newGroupObject["Slots"] = [];
       $groupId = $value["Id"];
 
       $query = "Select * from GroupsSlots where GroupId =:group;";
@@ -94,8 +90,10 @@ class GROUP
         $stmt->execute();
         $NewSlot = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        array_push($final[$value["Id"]], $NewSlot);
+        // array_push($final[$value["Id"]], $NewSlot);
+        array_push($newGroupObject["Slots"], $NewSlot);
       }
+      array_push($final, $newGroupObject);
     }
     return json_encode($final);
   }

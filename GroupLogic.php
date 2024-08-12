@@ -19,6 +19,8 @@ $last = $path[count($path) - 1];
 switch ($_SERVER["REQUEST_METHOD"]) {
   case "POST": // insert
     if ($last === "Insert") {
+
+      // print_r($_POST);
       $group->Insert($_POST);
     }
     if ($last === "Delete") {
@@ -27,11 +29,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       echo "DELETED";
     }
     if ($last === "Changes") {
-      print_r($_POST);
-      foreach ($_POST as $userID => $GroupName) {
-        // echo $userID . ": " . $GroupName . "\n";
+      foreach ($_POST as $userID => $GroupName)
         $group->insertUserInGroup($userID, $GroupName);
-      }
     }
     die();
   case "GET":
