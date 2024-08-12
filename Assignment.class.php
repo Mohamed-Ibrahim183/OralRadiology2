@@ -286,8 +286,8 @@ class Assignment
 		$stmt = $pdo->prepare($query);
 		$stmt->bindParam(":group", $group["GroupId"]);
 		$stmt->execute();
-		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC); // ["Assignment"]
-
+		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		
 		$assignmentList = array();
 		foreach ($assignments as $assignment) {
 			$query = "SELECT * from assignments where Id=:assignment";
@@ -295,9 +295,16 @@ class Assignment
 			$stmt->bindParam(":assignment", $assignment["Assignment"]);
 			$stmt->execute();
 			$newAssignment = $stmt->fetch(PDO::FETCH_ASSOC);
+			
+			// Add the open and close attributes to the assignment
+			$newAssignment['open'] = $assignment['open'];
+			$newAssignment['close'] = $assignment['close'];
+			
 			$assignmentList[] = $newAssignment;
 		}
+		
 		return $assignmentList;
+		
 	}
 	public function getSubmissionStatus($pdo)
 	{
@@ -466,6 +473,21 @@ class Assignment
 			$submission['Grade'] = $this->getGrade($pdo, $submission['Id']);
 		}
 		return $submissions;
+	}
+	public function GetSubmissionByUser($pdo, $user) {
+		try {
+			$query = "SELECT * FROM submissions WHERE StudentId = :selected";
+			$stmt = $pdo->prepare($query);
+			$stmt->bindParam(":selected", $user);
+			$stmt->execute();
+			$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($submissions as &$submission) {
+				$submission['Grade'] = $this->getGrade($pdo, $submission['Id']);
+			}
+			return $submissions;
+		} catch (Exception $e) {
+			return ['error' => $e->getMessage()];
+		}
 	}
 	public function GetSubmissionById($pdo, $student)
 	{

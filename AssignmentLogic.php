@@ -258,6 +258,14 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       $res = $assignment->GetSubmissionByUserAndAssignment($pdo, $_GET["userId"], $_GET["assignmentId"]);
       echo json_encode($res);
     }
+    if (isset($_GET["Action"]) && $_GET["Action"] === "GetSubmissionByUser") {
+      if (isset($_GET["userId"])) {
+          $res = $assignment->GetSubmissionByUser($pdo, $_GET["userId"]);
+          echo json_encode($res);
+      } else {
+          echo json_encode(['error' => 'User ID is missing']);
+      }
+  }
     if (isset($_GET["Action"]) and $_GET["Action"] === "fetchAssignment") {
       if (trim($_GET["assignmentId"]) !== "") {
         $assignmentData = $assignment->fetchAssignment($_GET["assignmentId"]);
