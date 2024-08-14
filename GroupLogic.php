@@ -11,39 +11,40 @@ $db = new DATABASE();
 $pdo = $db->createConnection("oralradiology");
 $group = new GROUP($pdo);
 
-
-$path = explode("/", $_SERVER['REQUEST_URI']);
-$last = $path[count($path) - 1];
-
+$QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));
+$Action = $QueryArr[0];
 
 switch ($_SERVER["REQUEST_METHOD"]) {
-  case "POST": // insert
-    if ($last === "Insert") {
+  case "POST":
+    switch ($Action) {
+      case "Insert":
+        $group->Insert($_POST);
+        break;
+      case "Delete":
+        $group->Delete($_POST);
+        echo "DELETED";
+        break;
+      case "Changes":
+        foreach ($_POST as $userID => $GroupName)
+          $group->insertUserInGroup($userID, $GroupName);
+        break;
+    }
+    break;
 
-      // print_r($_POST);
-      $group->Insert($_POST);
-    }
-    if ($last === "Delete") {
-      // print_r($_POST);
-      $group->Delete($_POST);
-      echo "DELETED";
-    }
-    if ($last === "Changes") {
-      foreach ($_POST as $userID => $GroupName)
-        $group->insertUserInGroup($userID, $GroupName);
-    }
-    die();
   case "GET":
-    if ($last === "Groups") {
-      print_r($group->getAll());
+    switch ($Action) {
+      case "Groups":
+        print_r($group->getAll());
+        break;
+      case "getGroupsNames":
+        $data = $group->getGroupsNames();
+        echo $data !== null ? json_encode($data) : "error";
+        break;
+      case "UsersMails":
+        // check if this endPoint is exist or not #Mohamed
+        $result = $group->getUsersInGroup($QueryArr[-1]);
+        echo json_encode($result);
+        break;
     }
-    if ($last === "getGroupsNames") {
-      $data = $group->getGroupsNames();
-      echo $data !== null ? json_encode($data) : "error";
-    }
-    if ($path[count($path) - 2] === "UsersMails") {
-      $result = $group->getUsersInGroup($last);
-      echo json_encode($result);
-    }
-    die();
+    break;
 }

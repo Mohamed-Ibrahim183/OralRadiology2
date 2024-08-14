@@ -2,14 +2,17 @@
 
 require_once('LoginStrategy.php');
 
-class LoginByEmail implements LoginStrategy {
+class LoginByEmail implements LoginStrategy
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function login($email, $password) {
+    public function login($email, $password)
+    {
         $query = "SELECT * FROM users WHERE Email=:selected";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindParam(":selected", $email);
@@ -31,4 +34,3 @@ class LoginByEmail implements LoginStrategy {
         return false;
     }
 }
-?>

@@ -4,10 +4,32 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 class Assignment
 {
-	private $Id, $Name, $ProfessorId, $maxLimitImages, $Topic, $conn;
-	public function __construct($conn)
+	private PDO $pdo;
+	public function __construct($pdo)
 	{
-		$this->conn = $conn;
+		$this->pdo = $pdo;
+	}
+	function prepareAndBind(string $query, $params, bool $execute = false): PDOStatement
+	{
+		$keys = array_keys($params);
+		$query .=  !empty($keys) ?  " (:" . implode(", :", $keys) . ");" : ";";
+		$stmt = $this->pdo->prepare($query);
+		$stmt = !empty($keys) ? $this->bindParams($params, $stmt) : $stmt;
+		if ($execute) $stmt->execute();
+		return $stmt;
+	}
+	function bindParams(array $params, PDOStatement &$stmt, bool $execute = false): PDOStatement
+	{
+		foreach ($params as $key => $value)
+			$stmt->bindValue($this->ensureColon($key), $value);
+		if ($execute) $stmt->execute();
+		return $stmt;
+	}
+
+	private function ensureColon($key): string
+	{
+		// Check if the key already starts with a colon
+		return strpos($key, ':') === 0 ? $key : ':' . $key;
 	}
 	public function insertAssignment($data)
 	{
@@ -18,48 +40,31 @@ class Assignment
 				return false;
 			}
 		}
-		$stmt = $this->conn->prepare("INSERT INTO assignments (Name, ProfessorId, maxLimitImages, Topic) VALUES (?, ?, ?, ?)");
-		if (!$stmt) {
-			echo "Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error;
-			return false;
-		}
-		$stmt->bind_param("siis", $data['Name'], $data['ProfessorId'], $data['maxLimitImages'], $data['Topic']);
-		if (!$stmt->execute()) {
-			echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
-			return false;
-		}
-		$stmt->close();
+
+		$stmt = $this->pdo->prepare("INSERT INTO assignments (Name, ProfessorId, maxLimitImages, Topic)
+			VALUES (:name, :professor, :maxLimitImages, :topic)");
+		$this->bindParams([
+			"name" => $data['Name'],
+			"professor" => $data['ProfessorId'],
+			"maxLimitImages" => $data["maxLimitImages"],
+			"topic" => $data["Topic"]
+		], $stmt, true);
+
 		return true;
 	}
 	public function fetchAssignment($assignmentId)
 	{
-		$stmt = $this->conn->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id = ?");
-		if (!$stmt) {
-			echo "Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error;
-			return false;
-		}
-
-		$stmt->bind_param("i", $assignmentId);
+		$stmt = $this->pdo->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id=:id;");
+		$stmt->bindParam(":id", $assignmentId);
 		$stmt->execute();
-		$result = $stmt->get_result();
-		$assignmentData = $result->fetch_assoc();
-		$stmt->close();
-		return $assignmentData;
+		return $stmt->fetch(PDO::FETCH_ASSOC);
 	}
 	public function fetchAllAssignments()
 	{
+		$stmt = $this->pdo->prepare("SELECT * FROM assignments");
 		$query = "SELECT * FROM assignments";
-		$result = $this->conn->query($query);
-
-		if ($result === false) {
-			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
-		}
-
-		$assignments = [];
-		while ($row = $result->fetch_assoc()) {
-			$assignments[] = $row;
-		}
-		return json_encode($assignments);
+		$stmt->execute();
+		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 	}
 	public function uploadImages($files, $assignmentId, $studentId, $maxImages, $ASName, $MSAId)
 	{
@@ -68,16 +73,14 @@ class Assignment
 
 		// Create submission record only once
 		$submitTime = date("Y-m-d H:i:s");
-		$stmtSubmissions = $this->conn->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (?, ?, ?)");
-		if (!$stmtSubmissions) {
-			return ['error' => 'Failed to prepare submission statement: ' . $this->conn->error];
-		}
-		$stmtSubmissions->bind_param('iis', $assignmentId, $studentId, $submitTime);
-		if (!$stmtSubmissions->execute()) {
-			return ['error' => 'Failed to insert submission record: ' . $stmtSubmissions->error];
-		}
-		$stmtSubmissions->close();
-
+		$stmt = $this->pdo->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (:assignment, :student, :time);");
+		// $stmtSubmissions = $this->conn->prepare();
+		$this->bindParams([
+			"assignment" => $assignmentId,
+			"student" => $studentId,
+			"time" => $submitTime
+		], $stmt);
+		$stmt->execute();
 		foreach ($files['tmp_name'] as $key => $tmpName) {
 			if ($uploadedFiles >= $maxImages) {
 				$responses[] = ['error' => 'Image limit exceeded'];
@@ -98,41 +101,34 @@ class Assignment
 			$targetPath = "../uploads/$ASName/$MSAId/" . $newFileName;
 
 			if (move_uploaded_file($tmpName, $targetPath)) {
-				$stmt = $this->conn->prepare("INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId) VALUES (?, ?, ?, 1)");
-				if (!$stmt) {
-					$responses[] = ['error' => 'Failed to prepare statement'];
-					continue;
-				}
-				$stmt->bind_param('sii', $targetPath, $studentId, $assignmentId);
+				$stmt = $this->pdo->prepare("INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId)
+					VALUES (:path, :student, :assignment, 1)");
+				$this->bindParams([
+					"path" => $targetPath,
+					"student" => $studentId,
+					"assignment" => $assignmentId,
+				], $stmt);
 				if ($stmt->execute()) {
 					$responses[] = ['success' => 'Image uploaded successfully', 'path' => $targetPath];
 					$uploadedFiles++;
-				} else {
-					$responses[] = ['error' => 'Failed to insert image record: ' . $stmt->error];
 				}
-				$stmt->close();
-			} else {
+			} else
 				$responses[] = ['error' => 'Failed to move uploaded file'];
-			}
 		}
 		return $responses;
 	}
 
-	public function getCategories($pdo)
+	public function getCategories()
 	{
-		$query = "Select * from categories;";
-		$stmt = $pdo->prepare($query);
+		$stmt = $this->pdo->prepare("Select * from categories;");
 		$stmt->execute();
-		$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		return $results;
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
-	public function addCategory($pdo, $category)
+	public function addCategory($category)
 	{
-		$query = "Insert Into categories (Name) Values (:Cat)";
-		$stmt = $pdo->prepare($query);
-		$name = htmlspecialchars(trim($category));
-		$stmt->bindParam(":Cat", $category);
-		$stmt->execute();
+		$this->prepareAndBind("Insert Into categories (Name) Values", [
+			"Cat" => $category
+		], true);
 		return True;
 	}
 	public function InsertAssignmentGroup($data)
@@ -142,9 +138,8 @@ class Assignment
 				return false; // Indicate that the insertion failed due to missing data
 		}
 		$action = "Insert";
-		$query = "Select * from GroupsAssignments";
-		$result = $this->conn->query($query);
-		while ($row = $result->fetch_assoc()) {
+		$stmt = $this->pdo->prepare("Select * from GroupsAssignments");
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			if ($row["Assignment"] === $data["AssignmentId"] and $row["Group"] === $data["GroupId"]) {
 				$action = "Update";
 				break;
@@ -155,35 +150,31 @@ class Assignment
 		$assignmentId = $data["AssignmentId"];
 		$groupId = $data["GroupId"];
 		if ($action === "Insert") {
-
-			$stmt = $this->conn->prepare("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES (?, ?, ?, ?)");
-			if (!$stmt) {
-				echo "Prepare failed: (" . $this->conn->errno . ") " . $this->conn->error;
-				return false;
-			}
-
-			$stmt->bind_param("ssii", $open, $close, $assignmentId, $groupId);
-			if (!$stmt->execute()) {
-				echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
-				return false;
-			}
-
-			$stmt->close();
+			$this->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+				"open" => $open,
+				"close" => $close,
+				"assignment" => $assignmentId,
+				"group" => $groupId
+			], true);
 			return true;
 		} else if ($action === "Update") {
-			$stmt = $this->conn->prepare("Update GroupsAssignments set open =?, close =? WHERE Assignment =? AND `Group` =?");
-			$stmt->bind_param("ssii", $open, $close, $assignmentId, $groupId);
-			$stmt->execute();
-			$stmt->close();
+			$stmt = $this->pdo->prepare("UPDATE GroupsAssignments set open=:openTime, close=:closeTime WHERE Assignment=:assignment AND `Group`=:group;");
+			$this->bindParams([
+				"openTime" => $open,
+				"closeTime" => $close,
+				"assignment" => $assignmentId,
+				"group" => $groupId
+			], $stmt, true);
 			return true;
 		}
 	}
-	public function DeleteAssignment($pdo, $assignmentId)
+	// --------------------------------
+	public function DeleteAssignment($assignmentId)
 	{
-		$query = "DELETE from assignments where Id=:Selected;";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(':Selected', $assignmentId);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("DELETE from assignments where Id=:Selected;");
+		$this->bindParams([
+			"Selected" => $assignmentId
+		], $stmt, true);
 		return true;
 	}
 	function countFilesInFolder($folderPath)
@@ -207,19 +198,18 @@ class Assignment
 	}
 	public function addNewSubmission($pdo, $student, $assignment)
 	{
-		$query = "INSERT into submissions (StudentId, assignmentId) Values (:student, :assignment);";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(':student', $student);
-		$stmt->bindParam(':assignment', $assignment);
-		$stmt->execute();
+		$this->prepareAndBind("INSERT into submissions (StudentId, assignmentId) Values", [
+			"student" => $student,
+			$assignment => $assignment
+		], true);
 		return true;
 	}
 	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission)
 	{
-		$query = "SELECT Id from categories where Name=:category;";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(':category', $category);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("SELECT Id from categories where Name=:category;");
+		$this->bindParams([
+			"category" => $category
+		], $stmt, true);
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
 		$category = $result["Id"];
 
@@ -251,173 +241,135 @@ class Assignment
 		// Move uploaded file to target directory
 		if (move_uploaded_file($fileTmpName, $targetFile)) {
 			// Update database with file path
-			$query = "INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId, submissionId) 
-										VALUES (:path, :student, :assignment, :category, :submission)";
-			$stmt = $pdo->prepare($query);
-			$stmt->bindParam(":path", $targetFile);
-			$stmt->bindParam(":student", $studentId);
-			$stmt->bindParam(":assignment", $assignmentId);
-			$stmt->bindParam(":category", $category);
-			$stmt->bindParam(":submission", $submission);
-
-			if ($stmt->execute()) {
-				return "Done";
-			} else {
-				return "Error: Database update failed.";
-			}
+			$this->prepareAndBind(
+				"INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId, submissionId) VALUES",
+				[
+					"path" => $targetFile,
+					"student" => $studentId,
+					"assignment" => $assignmentId,
+					"category" => $category,
+					"submission" => $submission
+				],
+				true
+			);
 		} else {
 			return "Error: Failed to move uploaded file.";
 		}
 	}
-	public function getAssignmentForUser($pdo, $user)
+	public function getAssignmentForUser($user)
 	{
 		// 1.get the user Group from the usersInGroups table
-		$query = "SELECT GroupId FROM usersingroups WHERE userId=:student";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":student", $user);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("SELECT GroupId FROM usersingroups WHERE userId=:student;");
+		$this->bindParams([
+			"student" => $user
+		], $stmt, true);
 		$group = $stmt->fetch(PDO::FETCH_ASSOC); // ["GroupId"]
 		if (!$group)
 			return ["Err" => 1]; // user not in a group
 
-
 		// 2. get all assignments Ids that allowed for this group
-		$query = "SELECT * FROM groupsassignments WHERE `Group`=:group";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":group", $group["GroupId"]);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("SELECT * FROM groupsassignments WHERE `Group`=:group;");
+		$this->bindParams([
+			"group" => $group["GroupId"]
+		], $stmt, true);
 		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		
+
 		$assignmentList = array();
 		foreach ($assignments as $assignment) {
-			$query = "SELECT * from assignments where Id=:assignment";
-			$stmt = $pdo->prepare($query);
-			$stmt->bindParam(":assignment", $assignment["Assignment"]);
-			$stmt->execute();
+			$stmt = $this->pdo->prepare("SELECT * from assignments where Id=:assignment;");
+			$this->bindParams([
+				"assignment" => $assignment["Assignment"]
+			], $stmt, true);
 			$newAssignment = $stmt->fetch(PDO::FETCH_ASSOC);
-			
+
 			// Add the open and close attributes to the assignment
 			$newAssignment['open'] = $assignment['open'];
 			$newAssignment['close'] = $assignment['close'];
-			
+
 			$assignmentList[] = $newAssignment;
 		}
-		
+
 		return $assignmentList;
-		
 	}
-	public function getSubmissionStatus($pdo)
+	public function getSubmissionStatus()
 	{
-		$query = "SELECT * from assignments;";
-		$stmt = $pdo->prepare($query);
+		$stmt = $this->pdo->prepare("SELECT * from assignments;");
 		$stmt->execute();
 		$Assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 		if (!$Assignments) return false;
 		foreach ($Assignments as $key => $value) {
-			$query = "SELECT * from submissions Where assignmentId=:selected;";
-			$stmt = $pdo->prepare($query);
-			$stmt->bindParam(":selected", $value["Id"]);
-			$stmt->execute();
+			$stmt = $this->prepareAndBind("SELECT * from submissions Where assignmentId=:selected;", [
+				"selected" => $value["Id"]
+			], true);
 			$assSubmission = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			$Assignments[$key]["Submitted"] = $assSubmission ?  count($assSubmission) : 0;
 		}
 		return $Assignments;
 	}
 
-	public function AssignmentGroupsShow($pdo)
+	public function AssignmentGroupsShow()
 	{
-		$query = "Select * from GroupsAssignments";
-		$stmt = $pdo->prepare($query);
+		$stmt = $this->pdo->prepare("Select * from GroupsAssignments");
 		$stmt->execute();
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 		$final = [];
 		foreach ($result as $value) {
-			$query2 = "SELECT Name from `groups` where id =:selected";
-			$stmt2 = $pdo->prepare($query2);
-			$stmt2->bindParam(':selected', $value["Group"]);
-			$stmt2->execute();
+			$stmt2 = $this->pdo->prepare("SELECT Name from `groups` where id =:selected;");
+			$this->bindParams([
+				"selected" => $value["Group"]
+			], $stmt2, true);
 			$groupName = $stmt2->fetch(PDO::FETCH_ASSOC);
-			// echo $groupName["Name"];
 
-			$query2 = "SELECT Name from `assignments` where id =:selected";
-			$stmt2 = $pdo->prepare($query2);
-			$stmt2->bindParam(':selected', $value["Assignment"]);
-			$stmt2->execute();
+			$stmt2 = $this->pdo->prepare("SELECT Name from `assignments` where id =:selected;");
+			$this->bindParams([
+				"selected" => $value["Assignment"]
+			], $stmt2, true);
 			$AssignmentName = $stmt2->fetch(PDO::FETCH_ASSOC);
-			// echo $AssignmentName["Name"];
-
 			array_push($final, ["openTime" => $value["open"], "closeTime" => $value["close"], "group" => $groupName["Name"], "Assignment" => $AssignmentName["Name"]]);
 		}
 		return $final;
 	}
-	public function evaluateImage($pdo, $imageId, $grade)
+	public function evaluateImage($imageId, $grade)
 	{
 		$grade = $grade > 100 ? 100 : $grade;
 		$grade = $grade < 0 ? 0 : $grade;
-
-		$query = "UPDATE assignmentimages set Grade=:Grade Where Id=:Selected";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":Selected", $imageId);
-		$stmt->bindParam(":Grade", $grade);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("UPDATE assignmentimages set Grade=:Grade Where Id=:Selected");
+		$this->bindParams([
+			"Selected" => $imageId,
+			"Grade" => $grade
+		], $stmt, true);
 		return true;
 	}
 
 	public function getSubmissionsByAssignmentId($assignmentId)
 	{
 		// Prepare the initial statement to get submissions
-		$stmt = $this->conn->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
-		if (!$stmt) {
-			echo "Prepare failed: (" . $this->conn->errorCode() . ") " . $this->conn->errorInfo()[2];
-			return false;
-		}
-
-		// Bind the assignment ID and execute the statement
-		$stmt->bindValue(':assignmentId', $assignmentId, PDO::PARAM_INT);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
+		$this->bindParams([
+			"assignmentId" => $assignmentId
+		], $stmt, true);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-		// // Iterate over the submissions to fetch student images and calculate grades
-		// foreach ($submissions as $key => $value) {
-		// 	// foreach ($submissions as &$submission) {
-		// 	$studentId = $submissions[$key]["StudentId"];
-
-		// 	// Prepare the statement to get assignment images for the current student
-		// 	$stmtImages = $this->conn->prepare("SELECT * FROM assignmentimages WHERE assignmentId = :assignmentId AND StudentId = :studentId");
-		// 	$stmtImages->bindValue(':assignmentId', $assignmentId, PDO::PARAM_INT);
-		// 	$stmtImages->bindValue(':studentId', $studentId, PDO::PARAM_INT);
-		// 	$stmtImages->execute();
-		// 	$studentImages = $stmtImages->fetchAll(PDO::FETCH_ASSOC);
-		// 	// print_r($studentImages);
-		// 	// Calculate the total grade for the current student
-		// 	$totalGrade = 1;
-		// 	foreach ($studentImages as $image) {
-		// 		$totalGrade += $image["Grade"];
-		// 	}
-
-		// 	// Add the calculated grade to the submission
-		// 	$submissions[$key]["Grade"] = $totalGrade;
-		// }
-
 		return $submissions;
 	}
-	public function getGrade($pdo, $submission)
+	public function getGrade($submission)
 	{
-		$query = "SELECT * FROM assignmentimages WHERE submissionId=:selected";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":selected", $submission);
-		$stmt->execute();
+		$stmt = $this->pdo->prepare("SELECT * FROM assignmentimages WHERE submissionId=:selected;");
+		$this->bindParams([
+			"selected" => $submission
+		], $stmt, true);
 		$grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		$totalGrade = 0;
-		foreach ($grades as $row) {
+		foreach ($grades as $row)
 			$totalGrade += $row["Grade"];
-		}
+
 		return ["Total" => $totalGrade, "count" => count($grades)];
 	}
-	public function getAssignmentImages($pdo, $submission)
+	public function getAssignmentImages($submission)
 	{
 		$query = "SELECT * FROM assignmentimages WHERE submissionId=:submission;";
-		$stmt = $pdo->prepare($query);
+		$stmt = $this->pdo->prepare($query);
 		$stmt->bindParam(":submission", $submission);
 		$stmt->execute();
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -425,91 +377,65 @@ class Assignment
 	}
 	public function AddAssignmentGradeAndCommentPDO($assignmentId, $studentId, $grade, $comment)
 	{
-		$stmt = $this->conn->prepare("UPDATE submissions SET Grade = ?, Comment = ? WHERE StudentId = ? AND assignmentId = ?");
-		if (!$stmt) {
-			echo "Prepare failed: (" . $this->conn->errorCode() . ") " . $this->conn->errorInfo()[2];
-			return false;
-		}
-
-		$stmt->bindValue(1, $grade, PDO::PARAM_STR);
-		$stmt->bindValue(2, $comment, PDO::PARAM_STR);
-		$stmt->bindValue(3, $studentId, PDO::PARAM_INT);
-		$stmt->bindValue(4, $assignmentId, PDO::PARAM_INT);
-
-		if (!$stmt->execute()) {
-			echo "Execute failed: (" . $stmt->errorCode() . ") " . $stmt->errorInfo()[2];
-			return false;
-		}
-
-		$stmt->closeCursor();
+		$stmt = $this->pdo->prepare("UPDATE submissions SET Grade=:grade, Comment=:comment WHERE StudentId=:student AND assignmentId=:assignment;");
+		$this->bindParams([
+			"grade" => $grade,
+			"comment" => $comment,
+			"student" => $studentId,
+			"assignment" => $assignmentId
+		], $stmt, true);
 		return true;
 	}
 	public function fetchAllSubmissions()
 	{
-		$query = "SELECT * FROM submissions";
-		$result = $this->conn->query($query);
-
-		if ($result === false) {
-			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
-		}
-
-		$submissions = [];
-		while ($row = $result->fetch_assoc()) {
-			$submissions[] = $row;
-		}
-		return json_encode($submissions);
-	}
-	public function GetSubmissionByUserAndAssignment($pdo, $user, $assignment)
-	{
-		// WHERE StudentId=:user AND assignmentId=:assignment;
-		$query = "SELECT * FROM submissions  WHERE StudentId=:user AND assignmentId=:assignment;";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":user", $user);
-		$stmt->bindParam(":assignment", $assignment);
+		$stmt = $this->pdo->prepare("SELECT * FROM submissions");
 		$stmt->execute();
-		// $grade = $this->getGrade($pdo, )
+		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+	}
+	public function GetSubmissionByUserAndAssignment($user, $assignment)
+	{
+		$stmt = $this->pdo->prepare(("SELECT * FROM submissions  WHERE StudentId=:user AND assignmentId=:assignment;"));
+		$this->bindParams([
+			"user" => $user,
+			"assignment" => $assignment
+		], $stmt, true);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($submissions as &$submission) {
-			$submission['Grade'] = $this->getGrade($pdo, $submission['Id']);
-		}
+		foreach ($submissions as &$submission)
+			$submission['Grade'] = $this->getGrade($submission['Id']);
 		return $submissions;
 	}
-	public function GetSubmissionByUser($pdo, $user) {
+	public function GetSubmissionByUser($user)
+	{
 		try {
-			$query = "SELECT * FROM submissions WHERE StudentId = :selected";
-			$stmt = $pdo->prepare($query);
-			$stmt->bindParam(":selected", $user);
-			$stmt->execute();
+			$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE StudentId = :selected");
+			$stmt = $this->bindParams([
+				"selected" => $user
+			], $stmt, true);
 			$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-			foreach ($submissions as &$submission) {
-				$submission['Grade'] = $this->getGrade($pdo, $submission['Id']);
-			}
+			foreach ($submissions as &$submission)
+				$submission['Grade'] = $this->getGrade($submission['Id']);
 			return $submissions;
 		} catch (Exception $e) {
 			return ['error' => $e->getMessage()];
 		}
 	}
-	public function GetSubmissionById($pdo, $student)
+	public function GetSubmissionById($student)
 	{
-		$query = "SELECT * from submissions where StudentId=:selected;";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindParam(":selected", $student);
-		$stmt->execute();
-		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		return $result;
+
+		$stmt = $this->pdo->prepare("SELECT * from submissions where StudentId=:selected;");
+		$this->bindParams([
+			"selected" => $student
+		], $stmt, true);
+		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 	public function Chart($assignmentId, $studentId)
 	{
-		$query = "SELECT SUM(Grade) as TotalGrade FROM assignmentimages WHERE AssignmentId = $assignmentId AND StudentID = $studentId";
-		$result = $this->conn->query($query);
-
-		if ($result === false) {
-			return json_encode(['error' => "Failed to fetch assignments: " . $this->conn->error]);
-		}
-
-		$row = $result->fetch_assoc();
-		$totalGrade = $row['TotalGrade'];
-
-		return $totalGrade;
+		$stmt = $this->pdo->prepare("SELECT SUM(Grade) as TotalGrade FROM assignmentimages WHERE AssignmentId=:assignment AND StudentID=:student");
+		$stmt = $this->bindParams([
+			"assignment" => $assignmentId,
+			"student" => $studentId
+		], $stmt, true);
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $row['TotalGrade'];
 	}
 }

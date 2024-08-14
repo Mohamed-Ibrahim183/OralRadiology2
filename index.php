@@ -1,4 +1,7 @@
 <?php
-$path = explode("/", $_SERVER['REQUEST_URI']);
-$last = $path[count($path) - 1];
-echo str_starts_with($last, "hello");
+
+$QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));
+$Action = $QueryArr[0];
+// $arr = explode("/", $Action);
+// echo $Action . "<br>";
+print_r($Action);

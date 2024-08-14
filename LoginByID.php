@@ -2,14 +2,17 @@
 
 require_once('LoginStrategy.php');
 
-class LoginByID implements LoginStrategy {
+class LoginByID implements LoginStrategy
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function login($id, $password) {
+    public function login($id, $password)
+    {
         $query = "SELECT * FROM users WHERE MSAId=:selected";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindParam(":selected", $id);
@@ -31,4 +34,3 @@ class LoginByID implements LoginStrategy {
         return false;
     }
 }
-?>

@@ -5,22 +5,43 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 class GROUP
 {
-  private $pdo;
+  private PDO $pdo;
   public function __construct($pdo)
   {
     $this->pdo = $pdo;
   }
+  // ----------------------------------------------------------------
+  function prepareAndBind(string $query, $params, bool $execute = false): PDOStatement
+  {
+    $keys = array_keys($params);
+    $query .=  !empty($keys) ?  " (:" . implode(", :", $keys) . ");" : ";";
+    $stmt = $this->pdo->prepare($query);
+    $stmt = !empty($keys) ? $this->bindParams($params, $stmt) : $stmt;
+    if ($execute) $stmt->execute();
+    return $stmt;
+  }
+  function bindParams(array $params, PDOStatement &$stmt, bool $execute = false): PDOStatement
+  {
+    foreach ($params as $key => $value)
+      $stmt->bindValue($this->ensureColon($key), $value);
+    if ($execute) $stmt->execute();
+    return $stmt;
+  }
+  private function ensureColon($key): string
+  {
+    // Check if the key already starts with a colon
+    return strpos($key, ':') === 0 ? $key : ':' . $key;
+  }
+  // ----------------------------------------------------------------
   public function Insert($postKeys)
   {
     $FrontData = $postKeys;
     unset($FrontData['Name']);
 
     // 1. Save Group
-    $query = "INSERT into Groups (Name) VALUES (:Name);";
-    $stmt = $this->pdo->prepare($query);
-    $name = htmlspecialchars(trim($postKeys['Name']));
-    $stmt->bindParam(":Name", $name);
-    $stmt->execute();
+    $this->prepareAndBind("INSERT into Groups (Name) VALUES", [
+      "Name" => htmlspecialchars(trim($postKeys['Name']))
+    ], true);
     $lastGroupID = $this->pdo->lastInsertId();
 
     foreach ($FrontData as $key => $value) {
@@ -32,27 +53,19 @@ class GROUP
       if ($condition === true) {
         // 2. Save Each Slot
         $secondArray = json_decode($value, true);
-        $query = "INSERT into Slots (Day, StartTime, EndTime, Room) VALUES (:day, :Start, :End, :Room)";
-        $stmt = $this->pdo->prepare($query);
-
-        $day = htmlspecialchars(trim($secondArray["day"]));
-        $Start = htmlspecialchars(trim($secondArray["Start"]));
-        $End = htmlspecialchars(trim($secondArray["End"]));
-        $Room = htmlspecialchars(trim($secondArray["Room"]));
-
-        $stmt->bindParam(":day", $day);
-        $stmt->bindParam(":Start", $Start);
-        $stmt->bindParam(":End", $End);
-        $stmt->bindParam(":Room", $Room);
-        $stmt->execute();
+        $this->prepareAndBind("INSERT into Slots (Day, StartTime, EndTime, Room) VALUES", [
+          "Day" => htmlspecialchars(trim($secondArray["day"])),
+          "StartTime" => htmlspecialchars(trim($secondArray["Start"])),
+          "EndTime" => htmlspecialchars(trim($secondArray["End"])),
+          "Room" => htmlspecialchars(trim($secondArray["Room"]))
+        ], true);
         $lastSlotID = $this->pdo->lastInsertId();
 
         // 3. table groupsSlots
-        $query = "INSERT into GroupsSlots (GroupId, SlotId) VALUES (:group, :slot)";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->bindParam(":group", $lastGroupID);
-        $stmt->bindParam(":slot", $lastSlotID);
-        $stmt->execute();
+        $this->prepareAndBind("INSERT into GroupsSlots (GroupId, SlotId) VALUES", [
+          "GroupId" => $lastGroupID,
+          "SlotId" => $lastSlotID
+        ], true);
       }
     }
     echo "DONE Insert Group with name {$postKeys['Name']}";
@@ -60,8 +73,7 @@ class GROUP
 
   public function getAll()
   {
-    $query = "Select * from Groups;";
-    $stmt = $this->pdo->prepare($query);
+    $stmt = $this->pdo->prepare("Select * from Groups;");
     $stmt->execute();
     $Groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (count($Groups) === 0)
@@ -101,8 +113,7 @@ class GROUP
 
   public function getGroupsNames()
   {
-    $query = "Select * from groups";
-    $stmt = $this->pdo->prepare($query);
+    $stmt = $this->pdo->prepare("Select * from groups");
     $stmt->execute();
     $GroupsNames = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $GroupsNames;
@@ -111,10 +122,10 @@ class GROUP
   public function Delete($postKeys)
   {
     // Get all Slot IDs associated with the Group ID
-    $query = "SELECT SlotId FROM GroupsSlots WHERE GroupId=:selected";
-    $stmt = $this->pdo->prepare($query);
-    $stmt->bindParam(":selected", $postKeys["id"]);
-    $stmt->execute();
+    $stmt = $this->pdo->prepare("SELECT SlotId FROM GroupsSlots WHERE GroupId=:selected");
+    $this->bindParams([
+      "selected" => $postKeys["id"]
+    ], $stmt, true);
     $slotIds = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Delete records from GroupsSlots
