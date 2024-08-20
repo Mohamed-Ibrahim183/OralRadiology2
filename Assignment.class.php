@@ -2,35 +2,18 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
+
+require_once("./Helpers.class.php");
 class Assignment
 {
 	private PDO $pdo;
+	private Helpers $helpers;
 	public function __construct($pdo)
 	{
 		$this->pdo = $pdo;
-	}
-	function prepareAndBind(string $query, $params, bool $execute = false): PDOStatement
-	{
-		$keys = array_keys($params);
-		$query .=  !empty($keys) ?  " (:" . implode(", :", $keys) . ");" : ";";
-		$stmt = $this->pdo->prepare($query);
-		$stmt = !empty($keys) ? $this->bindParams($params, $stmt) : $stmt;
-		if ($execute) $stmt->execute();
-		return $stmt;
-	}
-	function bindParams(array $params, PDOStatement &$stmt, bool $execute = false): PDOStatement
-	{
-		foreach ($params as $key => $value)
-			$stmt->bindValue($this->ensureColon($key), $value);
-		if ($execute) $stmt->execute();
-		return $stmt;
+		$this->helpers = new Helpers($this->pdo);
 	}
 
-	private function ensureColon($key): string
-	{
-		// Check if the key already starts with a colon
-		return strpos($key, ':') === 0 ? $key : ':' . $key;
-	}
 	public function insertAssignment($data)
 	{
 		foreach ($data as $value) {
@@ -43,7 +26,7 @@ class Assignment
 
 		$stmt = $this->pdo->prepare("INSERT INTO assignments (Name, ProfessorId, maxLimitImages, Topic)
 			VALUES (:name, :professor, :maxLimitImages, :topic)");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"name" => $data['Name'],
 			"professor" => $data['ProfessorId'],
 			"maxLimitImages" => $data["maxLimitImages"],
@@ -75,7 +58,7 @@ class Assignment
 		$submitTime = date("Y-m-d H:i:s");
 		$stmt = $this->pdo->prepare("INSERT INTO submissions (assignmentId, StudentId, submitTime) VALUES (:assignment, :student, :time);");
 		// $stmtSubmissions = $this->conn->prepare();
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"assignment" => $assignmentId,
 			"student" => $studentId,
 			"time" => $submitTime
@@ -103,7 +86,7 @@ class Assignment
 			if (move_uploaded_file($tmpName, $targetPath)) {
 				$stmt = $this->pdo->prepare("INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId)
 					VALUES (:path, :student, :assignment, 1)");
-				$this->bindParams([
+				$this->helpers->bindParams([
 					"path" => $targetPath,
 					"student" => $studentId,
 					"assignment" => $assignmentId,
@@ -126,7 +109,7 @@ class Assignment
 	}
 	public function addCategory($category)
 	{
-		$this->prepareAndBind("Insert Into categories (Name) Values", [
+		$this->helpers->prepareAndBind("Insert Into categories (Name) Values", [
 			"Cat" => $category
 		], true);
 		return True;
@@ -150,7 +133,7 @@ class Assignment
 		$assignmentId = $data["AssignmentId"];
 		$groupId = $data["GroupId"];
 		if ($action === "Insert") {
-			$this->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+			$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
 				"open" => $open,
 				"close" => $close,
 				"assignment" => $assignmentId,
@@ -159,7 +142,7 @@ class Assignment
 			return true;
 		} else if ($action === "Update") {
 			$stmt = $this->pdo->prepare("UPDATE GroupsAssignments set open=:openTime, close=:closeTime WHERE Assignment=:assignment AND `Group`=:group;");
-			$this->bindParams([
+			$this->helpers->bindParams([
 				"openTime" => $open,
 				"closeTime" => $close,
 				"assignment" => $assignmentId,
@@ -172,7 +155,7 @@ class Assignment
 	public function DeleteAssignment($assignmentId)
 	{
 		$stmt = $this->pdo->prepare("DELETE from assignments where Id=:Selected;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"Selected" => $assignmentId
 		], $stmt, true);
 		return true;
@@ -198,7 +181,7 @@ class Assignment
 	}
 	public function addNewSubmission($pdo, $student, $assignment)
 	{
-		$this->prepareAndBind("INSERT into submissions (StudentId, assignmentId) Values", [
+		$this->helpers->prepareAndBind("INSERT into submissions (StudentId, assignmentId) Values", [
 			"student" => $student,
 			$assignment => $assignment
 		], true);
@@ -207,7 +190,7 @@ class Assignment
 	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission)
 	{
 		$stmt = $this->pdo->prepare("SELECT Id from categories where Name=:category;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"category" => $category
 		], $stmt, true);
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -241,7 +224,7 @@ class Assignment
 		// Move uploaded file to target directory
 		if (move_uploaded_file($fileTmpName, $targetFile)) {
 			// Update database with file path
-			$this->prepareAndBind(
+			$this->helpers->prepareAndBind(
 				"INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId, submissionId) VALUES",
 				[
 					"path" => $targetFile,
@@ -260,7 +243,7 @@ class Assignment
 	{
 		// 1.get the user Group from the usersInGroups table
 		$stmt = $this->pdo->prepare("SELECT GroupId FROM usersingroups WHERE userId=:student;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"student" => $user
 		], $stmt, true);
 		$group = $stmt->fetch(PDO::FETCH_ASSOC); // ["GroupId"]
@@ -269,7 +252,7 @@ class Assignment
 
 		// 2. get all assignments Ids that allowed for this group
 		$stmt = $this->pdo->prepare("SELECT * FROM groupsassignments WHERE `Group`=:group;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"group" => $group["GroupId"]
 		], $stmt, true);
 		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -277,7 +260,7 @@ class Assignment
 		$assignmentList = array();
 		foreach ($assignments as $assignment) {
 			$stmt = $this->pdo->prepare("SELECT * from assignments where Id=:assignment;");
-			$this->bindParams([
+			$this->helpers->bindParams([
 				"assignment" => $assignment["Assignment"]
 			], $stmt, true);
 			$newAssignment = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -299,7 +282,7 @@ class Assignment
 
 		if (!$Assignments) return false;
 		foreach ($Assignments as $key => $value) {
-			$stmt = $this->prepareAndBind("SELECT * from submissions Where assignmentId=:selected;", [
+			$stmt = $this->helpers->prepareAndBind("SELECT * from submissions Where assignmentId=:selected;", [
 				"selected" => $value["Id"]
 			], true);
 			$assSubmission = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -317,13 +300,13 @@ class Assignment
 		$final = [];
 		foreach ($result as $value) {
 			$stmt2 = $this->pdo->prepare("SELECT Name from `groups` where id =:selected;");
-			$this->bindParams([
+			$this->helpers->bindParams([
 				"selected" => $value["Group"]
 			], $stmt2, true);
 			$groupName = $stmt2->fetch(PDO::FETCH_ASSOC);
 
 			$stmt2 = $this->pdo->prepare("SELECT Name from `assignments` where id =:selected;");
-			$this->bindParams([
+			$this->helpers->bindParams([
 				"selected" => $value["Assignment"]
 			], $stmt2, true);
 			$AssignmentName = $stmt2->fetch(PDO::FETCH_ASSOC);
@@ -336,7 +319,7 @@ class Assignment
 		$grade = $grade > 100 ? 100 : $grade;
 		$grade = $grade < 0 ? 0 : $grade;
 		$stmt = $this->pdo->prepare("UPDATE assignmentimages set Grade=:Grade Where Id=:Selected");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"Selected" => $imageId,
 			"Grade" => $grade
 		], $stmt, true);
@@ -347,7 +330,7 @@ class Assignment
 	{
 		// Prepare the initial statement to get submissions
 		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"assignmentId" => $assignmentId
 		], $stmt, true);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -356,7 +339,7 @@ class Assignment
 	public function getGrade($submission)
 	{
 		$stmt = $this->pdo->prepare("SELECT * FROM assignmentimages WHERE submissionId=:selected;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"selected" => $submission
 		], $stmt, true);
 		$grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -375,27 +358,10 @@ class Assignment
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		return $result;
 	}
-	public function AddAssignmentGradeAndCommentPDO($assignmentId, $studentId, $grade, $comment)
-	{
-		$stmt = $this->pdo->prepare("UPDATE submissions SET Grade=:grade, Comment=:comment WHERE StudentId=:student AND assignmentId=:assignment;");
-		$this->bindParams([
-			"grade" => $grade,
-			"comment" => $comment,
-			"student" => $studentId,
-			"assignment" => $assignmentId
-		], $stmt, true);
-		return true;
-	}
-	public function fetchAllSubmissions()
-	{
-		$stmt = $this->pdo->prepare("SELECT * FROM submissions");
-		$stmt->execute();
-		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-	}
 	public function GetSubmissionByUserAndAssignment($user, $assignment)
 	{
 		$stmt = $this->pdo->prepare(("SELECT * FROM submissions  WHERE StudentId=:user AND assignmentId=:assignment;"));
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"user" => $user,
 			"assignment" => $assignment
 		], $stmt, true);
@@ -408,7 +374,7 @@ class Assignment
 	{
 		try {
 			$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE StudentId = :selected");
-			$stmt = $this->bindParams([
+			$stmt = $this->helpers->bindParams([
 				"selected" => $user
 			], $stmt, true);
 			$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -423,19 +389,9 @@ class Assignment
 	{
 
 		$stmt = $this->pdo->prepare("SELECT * from submissions where StudentId=:selected;");
-		$this->bindParams([
+		$this->helpers->bindParams([
 			"selected" => $student
 		], $stmt, true);
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
-	}
-	public function Chart($assignmentId, $studentId)
-	{
-		$stmt = $this->pdo->prepare("SELECT SUM(Grade) as TotalGrade FROM assignmentimages WHERE AssignmentId=:assignment AND StudentID=:student");
-		$stmt = $this->bindParams([
-			"assignment" => $assignmentId,
-			"student" => $studentId
-		], $stmt, true);
-		$row = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $row['TotalGrade'];
 	}
 }

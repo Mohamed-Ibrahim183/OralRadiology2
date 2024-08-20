@@ -15,7 +15,7 @@ require_once('./LoginByEmail.php');
 $db = new DATABASE();
 $pdo = $db->createConnection("oralradiology");
 $user = new USER($pdo);
- 
+
 
 $QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));
 $Action = $QueryArr[0];

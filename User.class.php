@@ -3,21 +3,18 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 // session_start();
+require_once("./Helpers.class.php");
 
 class USER
 {
   private $Id, $Password, $MSAId, $Name, $Email, $Type, $PersonalImage, $lastIndex, $pdo;
+  private Helpers $helpers;
 
   public function __construct($pdo)
   {
     $this->pdo = $pdo;
+    $this->helpers = new Helpers($pdo);
   }
-
-  public function getConnection()
-  {
-    return $this->pdo;
-  }
-
   public function Insert($postKeys, $tableColumns, $tableName, $hashName)
   {
     $ready = true;
