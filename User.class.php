@@ -7,7 +7,8 @@ require_once("./Helpers.class.php");
 
 class USER
 {
-  private $Id, $Password, $MSAId, $Name, $Email, $Type, $PersonalImage, $lastIndex, $pdo;
+  private $Id, $Password, $MSAId, $Name, $Email, $Type, $PersonalImage, $lastIndex;
+  private PDO $pdo;
   private Helpers $helpers;
 
   public function __construct($pdo)
@@ -57,6 +58,7 @@ class USER
     }
     return -1;
   }
+
   public function getTotalUsers($usersType)
   {
     $query = "SELECT Type, COUNT(*) AS user_count FROM users WHERE Type=:Selected;";
@@ -224,5 +226,25 @@ class USER
     $stmt = $this->pdo->prepare($query);
     $stmt->bindParam(":id", $userId);
     $stmt->execute();
+  }
+
+  public function insertByMSAId($userData)
+  {
+    $this->helpers->prepareAndBind("INSERT into users (MSAId, Type, Password) Values", [
+      "MSAId" => $userData["MSAId"],
+      "Type" => $userData["Type"],
+      "Password" => "pass",
+    ], true);
+    return true;
+  }
+  public function saveUserChanges($changes)
+  {
+    $stmt = $this->pdo->prepare("UPDATE users set Email=:email, Name=:name where MSAId=:msa;");
+    $this->helpers->bindParams([
+      "email" => $changes["Email"],
+      "name" => $changes["username"],
+      "msa" => $changes["MSAId"],
+    ], $stmt, true);
+    return true;
   }
 }

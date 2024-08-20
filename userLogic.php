@@ -33,6 +33,15 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 					$user->uploadImage($_FILES["personalImage"], "../uploads/{$selectedUser}", $lastID);
 				}
 				break;
+			case "InsertMSAId":
+
+				$res = $user->insertByMSAId($_POST);
+				echo $res ? "INSERTED" : "ERROR";
+				break;
+			case "ChangeUserProfile":
+				$res = $user->saveUserChanges($_POST);
+				echo $res ? "UPDATED" : "ERROR";
+				break;
 			case "Login":
 				$context = new LoginContext();
 				$identifier = $_POST["identifier"];
