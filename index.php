@@ -1,7 +1,14 @@
 <?php
 
-$QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));
-$Action = $QueryArr[0];
-// $arr = explode("/", $Action);
-// echo $Action . "<br>";
-print_r($Action);
+// Example script to test password hashing and verification
+$password = "testpassword";
+$hashed_password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+
+echo "Plain text password: $password\n";
+echo "Hashed password: $hashed_password\n";
+
+if (password_verify($password, $hashed_password)) {
+  echo "Password verification successful.\n";
+} else {
+  echo "Password verification failed.\n";
+}

@@ -1,5 +1,5 @@
 <?php
-interface LoginStrategy {
+interface LoginStrategy
+{
     public function login($identifier, $password);
 }
-?>

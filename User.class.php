@@ -58,6 +58,17 @@ class USER
     }
     return -1;
   }
+  public function changePassword($data)
+  {
+    $query = "UPDATE users SET Password=:pass WHERE Id=:id";
+    $stmt = $this->pdo->prepare($query);
+    $this->helpers->bindParams(([
+      // "pass" => $data["password"],
+      "pass" => password_hash($data["password"], PASSWORD_BCRYPT, ['cost' => 12]),
+      "id" => $data["Id"],
+    ]), $stmt, true); // Bind parameters and execute query
+    return true;
+  }
 
   public function getTotalUsers($usersType)
   {

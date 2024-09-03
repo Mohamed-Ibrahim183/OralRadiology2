@@ -34,7 +34,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 				}
 				break;
 			case "InsertMSAId":
-
 				$res = $user->insertByMSAId($_POST);
 				echo $res ? "INSERTED" : "ERROR";
 				break;
@@ -71,6 +70,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 			case "GetTotalUsersType":
 				$done = $user->getTotalUsers($_POST["Type"]);
 				echo ($done[0]["user_count"]);
+				break;
+			case "changePassword":
+				// print_r($_POST);
+				$user->changePassword($_POST);
 				break;
 		}
 		die();
