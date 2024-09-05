@@ -78,6 +78,13 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         if ($cats)
           echo json_encode($cats);
         break;
+      case "GetAssignmentSubmissionReport":
+        echo json_encode($assignment->assignmentSubmissionReport());
+        break;
+      case "GetAssignmentSubmissionStudentReport":
+        echo json_encode($assignment->studentAssignmentsReport($_GET["Id"]));
+        // echo $assignment->studentAssignmentsReport($_GET["Id"]);
+        break;
       case "submissionsStatus":
         // for professor dashboard (Chart)
         $done = $assignment->getSubmissionStatus();
@@ -110,6 +117,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           $responseData = [];
           foreach ($submissions as $submission) {
             $userData = $userClass->getUser($submission['StudentId'], 'Id');
+
             $userData["submission"] = $submission["Id"];
             $userData["Grade"] = $assignment->getGrade($submission["Id"]);
             $userData["submitTime"] = $submission["submitTime"];

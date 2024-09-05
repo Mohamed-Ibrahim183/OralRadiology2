@@ -94,6 +94,7 @@ class USER
       $this->Email = $result["Email"];
       $this->Type = $result["Type"];
       $this->PersonalImage = $result["PersonalImage"];
+      unset($result["Password"]);
       return $result;
     }
   }
@@ -173,22 +174,22 @@ class USER
       // done
     }
   }
-  public function Login($MSAId, $password)
+  public function Login($identifier, $password)
   {
-    $query = "SELECT * FROM users WHERE MSAId=:selected";
+    $query = "SELECT * from users where ";
+    $query .= filter_var($identifier, FILTER_VALIDATE_EMAIL) ? "Email=:identifier" : "MSAId=:identifier";
     $stmt = $this->pdo->prepare($query);
-    $stmt->bindParam(":selected", $MSAId);
+    $stmt->bindParam(":identifier", $identifier);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    $logged = false;
-
-    if ($user && $password === $user["Password"]) {
-      unset($user["Password"]);
-      return $user;
-    } else {
-      echo "not Logged In";
-      return false;
-    }
+    if ($user) {
+      if (password_verify($password, $user["Password"]) || $password === $user["Password"])
+        unset($user["Password"]);
+      else
+        return ["Error" => "Password for $identifier is incorrect"];
+    } else
+      return ["Error" => "User Not Found [Contact With Admin]"];
+    return $user;
   }
 
   public function getIMage($id)

@@ -101,6 +101,61 @@ class Assignment
 		return $responses;
 	}
 
+	public function assignmentSubmissionReport()
+	{
+		// 1.select all assignments
+		$stmt = $this->pdo->prepare("SELECT * FROM assignments");
+		$stmt->execute();
+		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		// 2. get how many submission for each assignment
+		foreach ($assignments as &$assignment) {
+			$stmt = $this->pdo->prepare("SELECT COUNT(*) from submissions WHERE assignmentId=:assignment;");
+			$stmt->execute([":assignment" => $assignment["Id"]]);
+			$assignment["SubmissionCount"] = $stmt->fetchColumn();
+		}
+		return $assignments;
+	}
+	public function getMaxGradeSubmissions(array $submissions)
+	{
+		$maxGrade = 0;
+		foreach ($submissions as $submission) {
+			$result = $this->getGrade($submission["Id"]);
+			if ($result["Total"] > $maxGrade)
+				$maxGrade = $result["Total"];
+		}
+		// echo "DONE GRADE \n";
+		return $maxGrade;
+	}
+	public function studentAssignmentsReport(int $studentId)
+	{
+		// 1. select all assignments
+		$stmt = $this->pdo->prepare("SELECT Name, Id FROM assignments");
+		$stmt->execute();
+		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		// echo "one\n";
+
+		// 2. for each assignment get student best grade and avg grade
+		foreach ($assignments as &$assignment) {
+			// 2.1 get grade for this student
+			$submissions = $this->GetSubmissionByUserAndAssignment($studentId, $assignment["Id"]);
+			$maxForUser = $this->getMaxGradeSubmissions($submissions);
+			$assignment["StudentGrade"] = $maxForUser;
+
+			// 2.2 get avg grade for all the students
+			$submissionsByAssignment = $this->getSubmissionsByAssignmentId($assignment["Id"]);
+			$totalGrades = 0;
+
+			foreach ($submissionsByAssignment as $sub) {
+				$result = $this->getGrade($sub["Id"]);
+				$totalGrades += $result["Total"];
+			}
+
+			$assignment["AVGGrades"] = count($submissionsByAssignment) !== 0 ? $totalGrades / count($submissionsByAssignment) : 0;
+		}
+		return $assignments;
+	}
+
 	public function getCategories()
 	{
 		$stmt = $this->pdo->prepare("Select * from categories;");
@@ -316,7 +371,7 @@ class Assignment
 	}
 	public function evaluateImage($imageId, $grade)
 	{
-		$grade = $grade > 100 ? 100 : $grade;
+		$grade = $grade > 10 ? 10 : $grade;
 		$grade = $grade < 0 ? 0 : $grade;
 		$stmt = $this->pdo->prepare("UPDATE assignmentimages set Grade=:Grade Where Id=:Selected");
 		$this->helpers->bindParams([

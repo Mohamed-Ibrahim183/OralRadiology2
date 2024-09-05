@@ -8,10 +8,6 @@ header("Access-Control-Allow-Methods: *");
 require_once('./User.class.php');
 require_once('./DataBase.class.php');
 
-require_once('./LoginContext.class.php');
-require_once('./LoginByID.php');
-require_once('./LoginByEmail.php');
-
 $db = new DATABASE();
 $pdo = $db->createConnection("oralradiology");
 $user = new USER($pdo);
@@ -42,27 +38,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 				echo $res ? "UPDATED" : "ERROR";
 				break;
 			case "Login":
-				$context = new LoginContext();
-				$identifier = $_POST["identifier"];
-				$password = $_POST["password"];
-				error_log("Identifier: $identifier");
-				error_log("Password: $password");
-				// Determine if identifier is an email or MSA ID
-				if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-					error_log("Using Email Strategy");
-					$context->setLoginStrategy(new LoginByEmail($pdo));
-				} else {
-					error_log("Using MSA ID Strategy");
-					$context->setLoginStrategy(new LoginByID($pdo));
-				}
-				$data = $context->executeLogin($identifier, $password);
-				if ($data) {
-					error_log("Login successful: " . json_encode($data));
-					echo json_encode($data);
-				} else {
-					error_log("Login failed: User not found or invalid credentials");
-					echo json_encode("Error in Identifier or Password (User Not Found)");
-				}
+				if (isset($_POST["identifier"]) && isset($_POST["password"]))
+					echo json_encode($user->Login($_POST["identifier"], $_POST["password"]));
+				else
+					echo json_encode(["Error" => "missing values identifier or password"]);
 				break;
 			case "UpdateImage":
 				echo $user->uploadImage($_FILES["Profile"], "../uploads/{$_POST["MSAId"]}", $_POST["Id"]);
@@ -72,7 +51,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 				echo ($done[0]["user_count"]);
 				break;
 			case "changePassword":
-				// print_r($_POST);
 				$user->changePassword($_POST);
 				break;
 		}
