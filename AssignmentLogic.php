@@ -66,6 +66,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $done = $assignment->evaluateImage($_POST["ImageId"], $_POST["Grade"]);
         echo $done ? "Image Evaluated" : "Error on evaluating the image";
         break;
+      case "EditCategory":
+        print_r($_POST);
+        echo $assignment->editCategory($_POST["categoryId"], $_POST["newName"]);
+        break;
     }
 
   case 'GET':

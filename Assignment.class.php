@@ -156,6 +156,12 @@ class Assignment
 		return $assignments;
 	}
 
+	public function editCategory($id, $name)
+	{
+		$stmt = $this->pdo->prepare("UPDATE categories SET Name = :name WHERE Id=:selected");
+		$stmt->execute([":name" => $name, ":selected" => $id]);
+		return "UPDATED";
+	}
 	public function getCategories()
 	{
 		$stmt = $this->pdo->prepare("Select * from categories;");

@@ -69,6 +69,11 @@ class USER
     ]), $stmt, true); // Bind parameters and execute query
     return true;
   }
+  public function resetPassword($userId)
+  {
+    $stmt = $this->pdo->prepare("UPDATE users SET Password=:pass WHERE Id=:selected");
+    $stmt->execute([":selected" => $userId, ":pass" => password_hash("pass", PASSWORD_BCRYPT, ['cost' => 12])]);
+  }
 
   public function getTotalUsers($usersType)
   {

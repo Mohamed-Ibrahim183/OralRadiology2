@@ -72,6 +72,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 			case "Delete":
 				$user->deleteUser($_GET["userId"]);
 				break;
+			case "resetPassword":
+				$user->resetPassword($_GET["userId"]);
+				break;
 		}
 		die();
 }
