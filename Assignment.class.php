@@ -162,6 +162,13 @@ class Assignment
 		$stmt->execute([":name" => $name, ":selected" => $id]);
 		return "UPDATED";
 	}
+	public function deleteCategory($id)
+	{
+		$stmt = $this->pdo->prepare("DELETE FROM categories WHERE Id = :id");
+		$stmt->execute([":id" => $id]);
+		return "DELETED";
+	}
+
 	public function getCategories()
 	{
 		$stmt = $this->pdo->prepare("Select * from categories;");

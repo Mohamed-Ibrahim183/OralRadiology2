@@ -89,20 +89,21 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($assignment->studentAssignmentsReport($_GET["Id"]));
         // echo $assignment->studentAssignmentsReport($_GET["Id"]);
         break;
+      case "DeleteCategory":
+        echo $assignment->deleteCategory($_GET["Id"]);
+        break;
       case "submissionsStatus":
         // for professor dashboard (Chart)
         $done = $assignment->getSubmissionStatus();
         echo $done ? json_encode($done) : "Error";
         break;
       case "AssignmentGroupsShow":
-
         $res = $assignment->AssignmentGroupsShow();
         echo json_encode($res);
         break;
       case "GetSubmissionAssignment":
         $assignmentClass = new Assignment($pdo); // Should pass the correct connection variable
         $userClass = new USER($pdo);
-
         // Fetch parameters from URL
         if (!isset($_GET['assignmentId'])) {
           echo json_encode(['error' => 'Missing required parameters (assignmentId)']);
