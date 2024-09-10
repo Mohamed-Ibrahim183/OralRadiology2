@@ -16,25 +16,35 @@ class Assignment
 
 	public function insertAssignment($data)
 	{
-		foreach ($data as $value) {
-			if (empty($value)) {
-				echo json_encode(['error' => 'Missing required fields']);
-				http_response_code(400); // Bad request
-				return false;
-			}
-		}
 
-		$stmt = $this->pdo->prepare("INSERT INTO assignments (Name, ProfessorId, maxLimitImages, Topic)
-			VALUES (:name, :professor, :maxLimitImages, :topic)");
+		// Insert the assignment into the assignments table
+		$stmt = $this->pdo->prepare("INSERT INTO assignments (Name, ProfessorId, Topic)
+			VALUES (:name, :professor, :topic)");
 		$this->helpers->bindParams([
 			"name" => $data['Name'],
 			"professor" => $data['ProfessorId'],
-			"maxLimitImages" => $data["maxLimitImages"],
 			"topic" => $data["Topic"]
 		], $stmt, true);
+	
+		// Retrieve the last inserted assignment ID
+		$assignmentId = $this->pdo->lastInsertId();
+	
+		// Insert categories into the assignment_categories table
+		$stmt = $this->pdo->prepare("INSERT INTO assignment_categories (assignment_id, category_id)
+			VALUES (:assignment_id, :category_id)");
+		$categoryarray = explode(",", $data['categories']);
+	   // echo($categoryarray);
 
+		foreach ($categoryarray as $category) {
+			// Bind the assignment ID and category ID for each category
+			$stmt->bindParam(':assignment_id', $assignmentId);
+			$stmt->bindParam(':category_id', $category);
+			$stmt->execute();  // Execute the insert for each category
+		}
+	
 		return true;
 	}
+	
 	public function fetchAssignment($assignmentId)
 	{
 		$stmt = $this->pdo->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id=:id;");
