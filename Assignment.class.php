@@ -4,6 +4,7 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 
 require_once("./Helpers.class.php");
+
 class Assignment
 {
 	private PDO $pdo;
@@ -33,7 +34,7 @@ class Assignment
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_categories (assignment_id, category_id)
 			VALUES (:assignment_id, :category_id)");
 		$categoryarray = explode(",", $data['categories']);
-	   // echo($categoryarray);
+	    //echo($categoryarray);
 
 		foreach ($categoryarray as $category) {
 			// Bind the assignment ID and category ID for each category
@@ -41,16 +42,105 @@ class Assignment
 			$stmt->bindParam(':category_id', $category);
 			$stmt->execute();  // Execute the insert for each category
 		}
-	
+		// Insert weeks into the assignment_weeks table
+		$stmt = $this->pdo->prepare("INSERT INTO assignment_weeks (assignment_id, week_num)
+		VALUES (:assignment_id, :week_num)");
+	    $weekNumarray = explode(",", $data['weekNum']); 
+		//echo($weekNumarray);
+		foreach ($weekNumarray as $week) {
+			// Bind the assignment ID and category ID for each category
+			$stmt->bindParam(':assignment_id', $assignmentId);
+			$stmt->bindParam(':week_num', $week);
+			$stmt->execute();  // Execute the insert for each category
+		}
+		//Get groups data and slots
+		require_once('./DataBase.class.php');
+		require_once('./Group.class.php');
+
+		$db = new DATABASE();
+		$conn = $db->Connection2();
+		$pdo = $db->createConnection();
+		$group = new GROUP($pdo);
+		$daysOfWeek = [
+			"sunday" => 0,
+			"monday" => 1,
+			"tuesday" => 2,
+			"wednesday" => 3,
+			"thursday" => 4,
+			"friday" => 5,
+			"saturday" => 6
+		];
+
+		//get the start week
+		$startweek=$this->getstartweek();
+		//start day
+		$startDay=$startweek[0]["Day"];
+		$groupsSlots = json_decode($group->getAll(), true);
+		foreach ($groupsSlots as $groupSlot) {
+				foreach($groupSlot["Slots"] as $slot) {
+					$targetDay = $slot["Day"];
+					$StartTime=$slot["StartTime"];
+					$EndTime=$slot["EndTime"];
+				}
+			
+			foreach ($weekNumarray as $weeknum) {
+				$wantedDay =$this->getWantedDay($startDay, $weeknum, $targetDay);
+				// echo "Week $weeknum: Wanted Day is $wantedDay\n";
+				$open = new DateTime($wantedDay . ' ' . $StartTime);
+				$open= $open->format('Y-m-d H:i:s');
+				$close = new DateTime($wantedDay . ' ' . $EndTime);
+				$close= $close->format('Y-m-d H:i:s');
+
+				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+					"open" => $open,
+					"close" => $close,
+					"assignment" => $assignmentId,
+					"group" => $groupSlot["Id"],
+				], true);
+			}
+		}
 		return true;
 	}
+	public function getWantedDay($startDay, $weeknum, $targetDay) {
+		$startDate = new DateTime($startDay);	
+		if ($weeknum > 1) {
+			$startDate->modify('+' . ($weeknum - 1) . ' weeks');
+		}
+		$startDayOfWeek = $startDate->format('l'); // Get the name of the start day (e.g., "Saturday")
 	
+		if (strtolower($startDayOfWeek) !== strtolower($targetDay)) {
+			// Modify the startDate to the next occurrence of the target day
+			$startDate->modify("next $targetDay");
+		}
+	
+		return $startDate->format('Y-m-d'); // Return the wanted day in 'Y-m-d' format
+	}
 	public function fetchAssignment($assignmentId)
 	{
 		$stmt = $this->pdo->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id=:id;");
 		$stmt->bindParam(":id", $assignmentId);
 		$stmt->execute();
-		return $stmt->fetch(PDO::FETCH_ASSOC);
+		$assignmentData = $stmt->fetch(PDO::FETCH_ASSOC);
+   		// Fetch the category IDs associated with the assignment
+
+		$stmt2 = $this->pdo->prepare("SELECT category_id FROM assignment_categories WHERE assignment_id=:assignment_id;");
+		$stmt2->bindParam(":assignment_id", $assignmentId);
+		$stmt2->execute();
+		$categories = $stmt2->fetchAll(PDO::FETCH_COLUMN);
+
+		// Prepare to fetch category names
+		$stmt3 = $this->pdo->prepare("SELECT Id, Name FROM categories WHERE Id=:Id;");
+		$responses = []; // Initialize the response array
+		foreach($categories as $cat){
+			$stmt3->bindParam(":Id", $cat);
+            $stmt3->execute();
+			$category = $stmt3->fetch(PDO::FETCH_ASSOC);
+			if ($category) {
+				$responses[] = ['categoryId' => $cat, 'categoryName' => $category['Name']];
+			}
+		}
+		$assignmentData['categories'] = $responses;
+		return $assignmentData;
 	}
 	public function fetchAllAssignments()
 	{
@@ -232,10 +322,22 @@ class Assignment
 	// --------------------------------
 	public function DeleteAssignment($assignmentId)
 	{
+		//Delete the week of the assignment from assignments week table
+		$stmt = $this->pdo->prepare("DELETE from assignment_weeks where assignment_id=:Selected;");
+		$this->helpers->bindParams([
+			"Selected" => $assignmentId
+		], $stmt, true);
+		//Delete the categories of the assignment from assignments categories table
+		$stmt = $this->pdo->prepare("DELETE from assignment_categories where assignment_id=:Selected;");
+		$this->helpers->bindParams([
+			"Selected" => $assignmentId
+		], $stmt, true);
+		//Delete the assignment from the assignment table
 		$stmt = $this->pdo->prepare("DELETE from assignments where Id=:Selected;");
 		$this->helpers->bindParams([
 			"Selected" => $assignmentId
 		], $stmt, true);
+
 		return true;
 	}
 	function countFilesInFolder($folderPath)
@@ -368,7 +470,14 @@ class Assignment
 		}
 		return $Assignments;
 	}
+	public function getstartweek()
+	{
+		$stmt = $this->pdo->prepare("SELECT * from startweek;");
+		$stmt->execute();
+		$startweek = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+		return $startweek;
+	}
 	public function AssignmentGroupsShow()
 	{
 		$stmt = $this->pdo->prepare("Select * from GroupsAssignments");
