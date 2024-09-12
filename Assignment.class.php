@@ -26,17 +26,17 @@ class Assignment
 			"professor" => $data['ProfessorId'],
 			"topic" => $data["Topic"]
 		], $stmt, true);
-	
+
+
 		// Retrieve the last inserted assignment ID
 		$assignmentId = $this->pdo->lastInsertId();
-	
+
 		// Insert categories into the assignment_categories table
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_categories (assignment_id, category_id)
 			VALUES (:assignment_id, :category_id)");
-		$categoryarray = explode(",", $data['categories']);
-	    //echo($categoryarray);
+		$categoryArray = explode(",", $data['categories']);
 
-		foreach ($categoryarray as $category) {
+		foreach ($categoryArray as $category) {
 			// Bind the assignment ID and category ID for each category
 			$stmt->bindParam(':assignment_id', $assignmentId);
 			$stmt->bindParam(':category_id', $category);
@@ -45,22 +45,18 @@ class Assignment
 		// Insert weeks into the assignment_weeks table
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_weeks (assignment_id, week_num)
 		VALUES (:assignment_id, :week_num)");
-	    $weekNumarray = explode(",", $data['weekNum']); 
-		//echo($weekNumarray);
-		foreach ($weekNumarray as $week) {
+		$weekNumArray = explode(",", $data['weekNum']);
+		//echo($weekNumArray);
+		foreach ($weekNumArray as $week) {
 			// Bind the assignment ID and category ID for each category
 			$stmt->bindParam(':assignment_id', $assignmentId);
 			$stmt->bindParam(':week_num', $week);
 			$stmt->execute();  // Execute the insert for each category
 		}
 		//Get groups data and slots
-		require_once('./DataBase.class.php');
 		require_once('./Group.class.php');
 
-		$db = new DATABASE();
-		$conn = $db->Connection2();
-		$pdo = $db->createConnection();
-		$group = new GROUP($pdo);
+		$group = new GROUP($this->pdo);
 		$daysOfWeek = [
 			"sunday" => 0,
 			"monday" => 1,
@@ -72,24 +68,24 @@ class Assignment
 		];
 
 		//get the start week
-		$startweek=$this->getstartweek();
+		$startWeek = $this->getstartweek();
 		//start day
-		$startDay=$startweek[0]["Day"];
+		$startDay = $startWeek[0]["Day"];
 		$groupsSlots = json_decode($group->getAll(), true);
 		foreach ($groupsSlots as $groupSlot) {
-				foreach($groupSlot["Slots"] as $slot) {
-					$targetDay = $slot["Day"];
-					$StartTime=$slot["StartTime"];
-					$EndTime=$slot["EndTime"];
-				}
-			
-			foreach ($weekNumarray as $weeknum) {
-				$wantedDay =$this->getWantedDay($startDay, $weeknum, $targetDay);
-				// echo "Week $weeknum: Wanted Day is $wantedDay\n";
+			foreach ($groupSlot["Slots"] as $slot) {
+				$targetDay = $slot["Day"];
+				$StartTime = $slot["StartTime"];
+				$EndTime = $slot["EndTime"];
+			}
+
+			foreach ($weekNumArray as $weekNum) {
+				$wantedDay = $this->getWantedDay($startDay, $weekNum, $targetDay);
+				// echo "Week $weekNum: Wanted Day is $wantedDay\n";
 				$open = new DateTime($wantedDay . ' ' . $StartTime);
-				$open= $open->format('Y-m-d H:i:s');
+				$open = $open->format('Y-m-d H:i:s');
 				$close = new DateTime($wantedDay . ' ' . $EndTime);
-				$close= $close->format('Y-m-d H:i:s');
+				$close = $close->format('Y-m-d H:i:s');
 
 				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
 					"open" => $open,
@@ -101,18 +97,19 @@ class Assignment
 		}
 		return true;
 	}
-	public function getWantedDay($startDay, $weeknum, $targetDay) {
-		$startDate = new DateTime($startDay);	
+	public function getWantedDay($startDay, $weeknum, $targetDay)
+	{
+		$startDate = new DateTime($startDay);
 		if ($weeknum > 1) {
 			$startDate->modify('+' . ($weeknum - 1) . ' weeks');
 		}
 		$startDayOfWeek = $startDate->format('l'); // Get the name of the start day (e.g., "Saturday")
-	
+
 		if (strtolower($startDayOfWeek) !== strtolower($targetDay)) {
 			// Modify the startDate to the next occurrence of the target day
 			$startDate->modify("next $targetDay");
 		}
-	
+
 		return $startDate->format('Y-m-d'); // Return the wanted day in 'Y-m-d' format
 	}
 	public function fetchAssignment($assignmentId)
@@ -121,7 +118,7 @@ class Assignment
 		$stmt->bindParam(":id", $assignmentId);
 		$stmt->execute();
 		$assignmentData = $stmt->fetch(PDO::FETCH_ASSOC);
-   		// Fetch the category IDs associated with the assignment
+		// Fetch the category IDs associated with the assignment
 
 		$stmt2 = $this->pdo->prepare("SELECT category_id FROM assignment_categories WHERE assignment_id=:assignment_id;");
 		$stmt2->bindParam(":assignment_id", $assignmentId);
@@ -131,9 +128,9 @@ class Assignment
 		// Prepare to fetch category names
 		$stmt3 = $this->pdo->prepare("SELECT Id, Name FROM categories WHERE Id=:Id;");
 		$responses = []; // Initialize the response array
-		foreach($categories as $cat){
+		foreach ($categories as $cat) {
 			$stmt3->bindParam(":Id", $cat);
-            $stmt3->execute();
+			$stmt3->execute();
 			$category = $stmt3->fetch(PDO::FETCH_ASSOC);
 			if ($category) {
 				$responses[] = ['categoryId' => $cat, 'categoryName' => $category['Name']];
