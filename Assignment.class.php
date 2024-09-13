@@ -139,6 +139,10 @@ class Assignment
 		$assignmentData['categories'] = $responses;
 		return $assignmentData;
 	}
+	public function getSingleAssignmentData(){
+		
+	}
+
 	public function fetchAllAssignments()
 	{
 		$stmt = $this->pdo->prepare("SELECT * FROM assignments");

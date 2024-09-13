@@ -77,6 +77,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "GetAll":
         echo $assignment->fetchAllAssignments();
         break;
+      case "getSingleAssignmentData":   
+
+        break;
       case "GetCategories":
         $cats = $assignment->getCategories();
         if ($cats)
