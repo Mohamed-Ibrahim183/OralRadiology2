@@ -45,6 +45,7 @@ class Assignment
 		// Insert weeks into the assignment_weeks table
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_weeks (assignment_id, week_num)
 		VALUES (:assignment_id, :week_num)");
+
 		$weekNumArray = explode(",", $data['weekNum']);
 		//echo($weekNumArray);
 		foreach ($weekNumArray as $week) {
@@ -97,6 +98,97 @@ class Assignment
 		}
 		return true;
 	}
+	public function UpdateAssignment($data)
+	{
+		// Update the assignment in the assignments table
+		$stmt = $this->pdo->prepare("UPDATE assignments 
+									 SET Name = :name, Topic = :topic
+									 WHERE Id = :id");
+		$this->helpers->bindParams([
+			"id" => $data['Id'],
+			"name" => $data['Name'],
+			"topic" => $data['Topic']
+		], $stmt, true);
+	
+		// Update categories in the assignment_categories table
+		$stmt = $this->pdo->prepare("DELETE FROM assignment_categories WHERE assignment_id = :assignment_id");
+		$stmt->bindParam(':assignment_id', $data['Id']);
+		$stmt->execute();
+	
+		$stmt = $this->pdo->prepare("INSERT INTO assignment_categories (assignment_id, category_id)
+									 VALUES (:assignment_id, :category_id)");
+		$categoryArray = explode(",", $data['categories']);
+
+        foreach ($categoryArray as $category) {
+			$stmt->bindParam(':assignment_id', $data['Id']);
+			$stmt->bindParam(':category_id', $category);
+			$stmt->execute();
+		}
+	
+		// Update weeks in the assignment_weeks table
+		$stmt = $this->pdo->prepare("DELETE FROM assignment_weeks WHERE assignment_id = :assignment_id");
+		$stmt->bindParam(':assignment_id', $data['Id']);
+		$stmt->execute();
+	
+		$stmt = $this->pdo->prepare("INSERT INTO assignment_weeks (assignment_id, week_num)
+		VALUES (:assignment_id, :week_num)");
+		$weekNumArray = explode(",", $data['weeks']);
+
+		foreach ($weekNumArray as $week) {
+			$stmt->bindValue(':assignment_id', $data['Id']);
+			$stmt->bindValue(':week_num', $week);
+			$stmt->execute();
+		}
+		//
+		$stmt = $this->pdo->prepare("DELETE FROM groupsassignments WHERE Assignment = :Assignment");
+		$stmt->bindParam(':Assignment', $data['Id']);
+		$stmt->execute();
+	
+		// Update group assignments
+		require_once('./Group.class.php');
+		$group = new GROUP($this->pdo);
+		$daysOfWeek = [
+			"sunday" => 0,
+			"monday" => 1,
+			"tuesday" => 2,
+			"wednesday" => 3,
+			"thursday" => 4,
+			"friday" => 5,
+			"saturday" => 6
+		];
+	
+		// Get the start week
+		$startWeek = $this->getstartweek();
+		$startDay = $startWeek[0]["Day"];
+		$groupsSlots = json_decode($group->getAll(), true);
+	
+		foreach ($groupsSlots as $groupSlot) {
+			foreach ($groupSlot["Slots"] as $slot) {
+				$targetDay = $slot["Day"];
+				$StartTime = $slot["StartTime"];
+				$EndTime = $slot["EndTime"];
+			}
+	
+			foreach ($weekNumArray as $weekNum) {
+				$wantedDay = $this->getWantedDay($startDay, $weekNum, $targetDay);
+				$open = new DateTime($wantedDay . ' ' . $StartTime);
+				$open = $open->format('Y-m-d H:i:s');
+				$close = new DateTime($wantedDay . ' ' . $EndTime);
+				$close = $close->format('Y-m-d H:i:s');
+	
+				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+					"open" => $open,
+					"close" => $close,
+					"assignment" => $data['Id'],
+					"group" => $groupSlot["Id"],
+				], true);
+			}
+		}
+	
+		return true;
+	}
+	
+	
 	public function getWantedDay($startDay, $weeknum, $targetDay)
 	{
 		$startDate = new DateTime($startDay);

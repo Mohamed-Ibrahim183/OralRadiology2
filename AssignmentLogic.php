@@ -25,6 +25,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           echo "Inserted";
         }
         break;
+      case "UpdateAssignment":
+        if ($assignment->UpdateAssignment($_POST)) {
+          echo "Updated";
+        }
+        break;
       case "DeleteAssignment":
         $done = $assignment->deleteAssignment($_POST["assignmentId"]);
         echo $done ? "done" : "Error on deleting the assignment";
