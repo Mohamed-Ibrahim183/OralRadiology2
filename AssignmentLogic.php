@@ -77,9 +77,22 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "GetAll":
         echo $assignment->fetchAllAssignments();
         break;
-      case "getSingleAssignmentData":   
-
-        break;
+        case "getSingleAssignmentData":   
+          if (isset($_GET['assignmentId'])) {
+            $assignmentId = intval($_GET['assignmentId']); 
+            $assignmentData = $assignment->getSingleAssignmentData($assignmentId);
+            
+            echo json_encode(
+                 $assignmentData
+            );
+          } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'assignmentId not provided'
+            ]);
+          }
+          break;
+        
       case "GetCategories":
         $cats = $assignment->getCategories();
         if ($cats)

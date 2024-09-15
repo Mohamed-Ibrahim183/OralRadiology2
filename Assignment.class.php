@@ -139,8 +139,36 @@ class Assignment
 		$assignmentData['categories'] = $responses;
 		return $assignmentData;
 	}
-	public function getSingleAssignmentData(){
-		
+	public function getSingleAssignmentData($assignmentId){
+		$stmt = $this->pdo->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id=:id;");
+		$stmt->bindParam(":id", $assignmentId);
+		$stmt->execute();
+		$assignmentData = $stmt->fetch(PDO::FETCH_ASSOC);
+		// Fetch the category IDs associated with the assignment
+
+		$stmt2 = $this->pdo->prepare("SELECT category_id FROM assignment_categories WHERE assignment_id=:assignment_id;");
+		$stmt2->bindParam(":assignment_id", $assignmentId);
+		$stmt2->execute();
+		$categories = $stmt2->fetchAll(PDO::FETCH_COLUMN);
+
+		// Prepare to fetch category names
+		$stmt3 = $this->pdo->prepare("SELECT Id, Name FROM categories WHERE Id=:Id;");
+		$responses = []; // Initialize the response array
+		foreach ($categories as $cat) {
+			$stmt3->bindParam(":Id", $cat);
+			$stmt3->execute();
+			$category = $stmt3->fetch(PDO::FETCH_ASSOC);
+			if ($category) {
+				$responses[] = ['categoryId' => $cat, 'categoryName' => $category['Name']];
+			}
+		}
+		$assignmentData['categories'] = $responses;
+		$stmt4 = $this->pdo->prepare("SELECT week_num FROM assignment_weeks WHERE assignment_id=:assignment_id;");
+		$stmt4->bindParam(":assignment_id", $assignmentId);
+		$stmt4->execute();
+		$weeks = $stmt4->fetchAll(PDO::FETCH_COLUMN);
+		$assignmentData['weeks'] = $weeks;
+		return json_decode(json_encode($assignmentData));
 	}
 
 	public function fetchAllAssignments()
