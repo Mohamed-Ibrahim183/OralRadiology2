@@ -75,7 +75,12 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         print_r($_POST);
         echo $assignment->editCategory($_POST["categoryId"], $_POST["newName"]);
         break;
-    }
+      case "updateStartWeek":
+        echo $assignment->updateStartWeek();
+        break;
+        
+     
+      }
 
   case 'GET':
     switch ($Action) {
@@ -235,5 +240,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           echo $assignmentData !== null ? json_encode($assignmentData) : json_encode(["error" => "No data found for assignment ID $assignmentId"]);
         }
         break;
-    }
+      case "getstartweek":
+        echo json_encode($assignment->getstartweek());
+        break;
+      }
+
 }

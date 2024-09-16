@@ -591,6 +591,9 @@ class Assignment
 		}
 		return $Assignments;
 	}
+	public function updateStartWeek(){
+		
+	}
 	public function getstartweek()
 	{
 		$stmt = $this->pdo->prepare("SELECT * from startweek;");
