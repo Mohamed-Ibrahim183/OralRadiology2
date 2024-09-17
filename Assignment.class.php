@@ -72,6 +72,7 @@ class Assignment
 		$startWeek = $this->getstartweek();
 		//start day
 		$startDay = $startWeek[0]["Day"];
+		//1
 		$groupsSlots = json_decode($group->getAll(), true);
 		foreach ($groupsSlots as $groupSlot) {
 			foreach ($groupSlot["Slots"] as $slot) {
@@ -88,11 +89,12 @@ class Assignment
 				$close = new DateTime($wantedDay . ' ' . $EndTime);
 				$close = $close->format('Y-m-d H:i:s');
 
-				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`,`week_num`) VALUES", [
 					"open" => $open,
 					"close" => $close,
 					"assignment" => $assignmentId,
 					"group" => $groupSlot["Id"],
+					"week_num"=>$weekNum,
 				], true);
 			}
 		}
@@ -176,11 +178,12 @@ class Assignment
 				$close = new DateTime($wantedDay . ' ' . $EndTime);
 				$close = $close->format('Y-m-d H:i:s');
 	
-				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`) VALUES", [
+				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`,`week_num`) VALUES", [
 					"open" => $open,
 					"close" => $close,
 					"assignment" => $data['Id'],
 					"group" => $groupSlot["Id"],
+					"week_num"=>$weekNum,
 				], true);
 			}
 		}
@@ -591,9 +594,89 @@ class Assignment
 		}
 		return $Assignments;
 	}
-	public function updateStartWeek(){
-		
+	public function updateStartWeek($day) {
+		// Convert array to string and format date
+		$formattedDay = date('Y-m-d', strtotime(is_array($day) ? implode('', $day) : $day));
+	
+		// Update the database
+		$stmt = $this->pdo->prepare("UPDATE startweek SET Day = :day WHERE Id=1");
+		$stmt->bindParam(':day', $formattedDay);
+		$stmt->execute();
+	
+		$startWeek = $this->getstartweek();
+		$startDay = $startWeek[0]["Day"];
+	
+		$stmt = $this->pdo->prepare("SELECT Id FROM assignments");
+		$stmt->execute();
+		$assignmentIds = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	
+		foreach ($assignmentIds as $assid) {
+			$assignmentid = $assid["Id"];
+			$stmt = $this->pdo->prepare("SELECT week_num FROM assignment_weeks WHERE assignment_id = :assignment_id;");
+			$stmt->bindParam(":assignment_id", $assignmentid, PDO::PARAM_INT);
+			$stmt->execute();
+			$weekNums = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			$weekNumArray = array_column($weekNums, 'week_num');
+	
+			// Get groups data and slots
+			require_once('./Group.class.php');
+			$group = new GROUP($this->pdo);
+	
+			$groupsSlots = json_decode($group->getAll(), true);
+	
+			foreach ($groupsSlots as $groupSlot) {
+				foreach ($groupSlot["Slots"] as $slot) {
+					$targetDay = $slot["Day"];
+					$StartTime = $slot["StartTime"];
+					$EndTime = $slot["EndTime"];
+				}
+	
+				foreach ($weekNumArray as $weekNum) {
+					$wantedDay = $this->getWantedDay($startDay, $weekNum, $targetDay);
+	
+					$open = new DateTime($wantedDay . ' ' . $StartTime);
+					$open = $open->format('Y-m-d H:i:s');
+	
+					$close = new DateTime($wantedDay . ' ' . $EndTime);
+					$close = $close->format('Y-m-d H:i:s');
+	
+					// Check if the record exists
+					$stmt = $this->pdo->prepare("SELECT COUNT(*) FROM groupsassignments WHERE `Assignment` = :assignmentid AND `Group` = :groupid AND `week_num` = :week_num");
+					$stmt->bindParam(':assignmentid', $assignmentid, PDO::PARAM_INT);
+					$stmt->bindParam(':groupid', $groupSlot["Id"], PDO::PARAM_INT);
+					$stmt->bindParam(':week_num', $weekNum, PDO::PARAM_INT);
+					$stmt->execute();
+					$exists = $stmt->fetchColumn() > 0;
+	
+					if ($exists) {
+						// Update existing record
+						$stmt = $this->pdo->prepare("UPDATE groupsassignments SET `open` = :open, `close` = :close WHERE `Assignment` = :assignmentid AND `Group` = :groupid AND `week_num` = :week_num");
+					} else {
+						// Insert new record
+						$stmt = $this->pdo->prepare("INSERT INTO groupsassignments (`Assignment`, `Group`, `open`, `close`, `week_num`) VALUES (:assignmentid, :groupid, :open, :close, :week_num)");
+					}
+	
+					// Bind parameters and execute
+					try {
+						$stmt->bindParam(':assignmentid', $assignmentid, PDO::PARAM_INT);
+						$stmt->bindParam(':groupid', $groupSlot["Id"], PDO::PARAM_INT);
+						$stmt->bindParam(':open', $open);
+						$stmt->bindParam(':close', $close);
+						$stmt->bindParam(':week_num', $weekNum, PDO::PARAM_INT);
+						$stmt->execute();
+					} catch (PDOException $e) {
+						echo "Error in query: " . $e->getMessage();
+					}
+				}
+			}
+		}
+		return true;
 	}
+	
+	
+	
+	
+	
 	public function getstartweek()
 	{
 		$stmt = $this->pdo->prepare("SELECT * from startweek;");

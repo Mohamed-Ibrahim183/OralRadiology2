@@ -76,7 +76,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo $assignment->editCategory($_POST["categoryId"], $_POST["newName"]);
         break;
       case "updateStartWeek":
-        echo $assignment->updateStartWeek();
+        echo $assignment->updateStartWeek($_POST);
         break;
         
      
