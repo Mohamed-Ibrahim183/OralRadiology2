@@ -40,7 +40,6 @@ class GROUP
   // ----------------------------------------------------------------
   public function Insert($postKeys)
   {
-    echo("hola from backend ");
       $FrontData = $postKeys;
       unset($FrontData['Name']);
   
@@ -74,19 +73,19 @@ class GROUP
           ], true);
         }
       }
-  
+
       // Retrieve Assignment-related data
       require_once("./Helpers.class.php");
       require_once('./Assignment.class.php');
       $assignment = new Assignment($this->pdo);
       $startWeek = $assignment->getstartweek();
       $startDay = $startWeek[0]["Day"];
-        
+
       // Fetch all assignment IDs
       $stmt = $this->pdo->prepare("SELECT Id FROM assignments");
       $stmt->execute();
       $assignmentIds = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
       foreach ($assignmentIds as $assid) {
           $assignmentid = $assid["Id"];
   
@@ -102,7 +101,7 @@ class GROUP
           $stmt->bindParam(":GroupId", $lastGroupID, PDO::PARAM_INT);
           $stmt->execute();
           $slotIds = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
           foreach ($slotIds as $slot) {
               $slotId = $slot['SlotId'];
   
@@ -114,7 +113,7 @@ class GROUP
               $targetDay = $slotDetails['Day'];
               $startTime = $slotDetails['StartTime'];
               $endTime = $slotDetails['EndTime'];
-              
+
               // Loop through each week number and generate open/close times
               foreach ($weekNumArray as $weekNum) {
                   $wantedDay = $assignment->getWantedDay($startDay, $weekNum, $targetDay);
@@ -124,15 +123,17 @@ class GROUP
   
                   $close = new DateTime($wantedDay . ' ' . $endTime);
                   $close = $close->format('Y-m-d H:i:s');
-                  
+                  echo("hola from backend ");
+
                   // Insert into groupsassignments table
-                  $this->prepareAndBind("INSERT INTO GroupsAssignments (open, close, Assignment, Group, week_num) VALUES", [
-                      "open" => $open,
-                      "close" => $close,
-                      "Assignment" => $assignmentid,
-                      "Group" => $lastGroupID,
-                      "week_num" => $weekNum
-                  ], true);
+                  $this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`, `week_num`) VALUES", [
+                    "open" => $open,
+                    "close" => $close,
+                    "assignment" => $assignmentid,
+                    "group" => $lastGroupID,
+                    "week_num" => $weekNum,
+                ], true);
+                
               }
           }
       }
