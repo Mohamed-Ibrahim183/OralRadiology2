@@ -595,6 +595,8 @@ class Assignment
 		return $Assignments;
 	}
 	public function updateStartWeek($day) {
+
+
 		// Convert array to string and format date
 		$formattedDay = date('Y-m-d', strtotime(is_array($day) ? implode('', $day) : $day));
 	
@@ -602,7 +604,7 @@ class Assignment
 		$stmt = $this->pdo->prepare("UPDATE startweek SET Day = :day WHERE Id=1");
 		$stmt->bindParam(':day', $formattedDay);
 		$stmt->execute();
-	
+	//2
 		$startWeek = $this->getstartweek();
 		$startDay = $startWeek[0]["Day"];
 	

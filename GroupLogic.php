@@ -4,6 +4,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 
+
 require_once("./DataBase.class.php");
 require_once("./Group.class.php");
 
@@ -18,7 +19,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
   case "POST":
     switch ($Action) {
       case "Insert":
-        $group->Insert($_POST);
+       echo $group->Insert($_POST);
         break;
       case "Delete":
         $group->Delete($_POST);
