@@ -78,31 +78,29 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "updateStartWeek":
         echo $assignment->updateStartWeek($_POST);
         break;
-        
-     
-      }
+    }
 
   case 'GET':
     switch ($Action) {
       case "GetAll":
         echo $assignment->fetchAllAssignments();
         break;
-        case "getSingleAssignmentData":   
-          if (isset($_GET['assignmentId'])) {
-            $assignmentId = intval($_GET['assignmentId']); 
-            $assignmentData = $assignment->getSingleAssignmentData($assignmentId);
-            
-            echo json_encode(
-                 $assignmentData
-            );
-          } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'assignmentId not provided'
-            ]);
-          }
-          break;
-        
+      case "getSingleAssignmentData":
+        if (isset($_GET['assignmentId'])) {
+          $assignmentId = intval($_GET['assignmentId']);
+          $assignmentData = $assignment->getSingleAssignmentData($assignmentId);
+
+          echo json_encode(
+            $assignmentData
+          );
+        } else {
+          echo json_encode([
+            'success' => false,
+            'message' => 'assignmentId not provided'
+          ]);
+        }
+        break;
+
       case "GetCategories":
         $cats = $assignment->getCategories();
         if ($cats)
@@ -128,58 +126,13 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($res);
         break;
       case "GetSubmissionAssignment":
-        $assignmentClass = new Assignment($pdo); // Should pass the correct connection variable
-        $userClass = new USER($pdo);
-        // Fetch parameters from URL
-        if (!isset($_GET['assignmentId'])) {
-          echo json_encode(['error' => 'Missing required parameters (assignmentId)']);
-          exit;
-        }
-        $assignmentId = (int)$_GET['assignmentId'];
-
-        try {
-          // Fetch submissions data
-          $submissions = $assignmentClass->getSubmissionsByAssignmentId($assignmentId);
-          if (!$submissions) {
-            echo json_encode(['error' => 'No submissions found']);
-            exit;
-          }
-
-          $responseData = [];
-          foreach ($submissions as $submission) {
-            $userData = $userClass->getUser($submission['StudentId'], 'Id');
-
-            $userData["submission"] = $submission["Id"];
-            $userData["Grade"] = $assignment->getGrade($submission["Id"]);
-            $userData["submitTime"] = $submission["submitTime"];
-            if ($userData)
-              $responseData[] = $userData;
-          }
-
-          echo json_encode($responseData); // Corrected the response format
-        } catch (Exception $e) {
-          echo json_encode(['error' => $e->getMessage()]);
-
-          http_response_code(500); // Internal Server Error
-        }
+        // print_r($_GET);
+        echo  json_encode($assignment->getFullSubmissionDataByAssignmentId($_GET["assignmentId"]));
         break;
       case "FetchAssignmentImages":
-        try {
-          $images = $assignment->getAssignmentImages($_GET["submission"]);
-          if ($images === false) {
-            throw new Exception("Failed to fetch images.");
-          }
 
-          if (empty($images)) {
-            echo json_encode(['error' => 'No images found for the provided IDs']);
-            http_response_code(404); // Not found
-          } else {
-            echo json_encode($images);
-          }
-        } catch (Exception $e) {
-          http_response_code(500);
-          echo json_encode(['error' => $e->getMessage()]);
-        }
+        if (isset($_GET["submission"]))
+          echo json_encode($assignment->getAssignmentImages($_GET["submission"]));
         break;
       case "GetAssignmentsForUser":
         echo json_encode($assignment->getAssignmentForUser($_GET["userId"]));
@@ -192,7 +145,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
             continue;
 
           $submission["Grade"] = $assignment->getGrade($submission["Id"]);
-          // print_r($submission);
 
           // 2. get assignment Name for each submission
           $query = "SELECT * from assignments where Id=:selectedAssignment;";
@@ -243,6 +195,5 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "getstartweek":
         echo json_encode($assignment->getstartweek());
         break;
-      }
-
+    }
 }

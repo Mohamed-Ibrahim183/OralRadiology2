@@ -94,7 +94,7 @@ class Assignment
 					"close" => $close,
 					"assignment" => $assignmentId,
 					"group" => $groupSlot["Id"],
-					"week_num"=>$weekNum,
+					"week_num" => $weekNum,
 				], true);
 			}
 		}
@@ -111,27 +111,27 @@ class Assignment
 			"name" => $data['Name'],
 			"topic" => $data['Topic']
 		], $stmt, true);
-	
+
 		// Update categories in the assignment_categories table
 		$stmt = $this->pdo->prepare("DELETE FROM assignment_categories WHERE assignment_id = :assignment_id");
 		$stmt->bindParam(':assignment_id', $data['Id']);
 		$stmt->execute();
-	
+
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_categories (assignment_id, category_id)
 									 VALUES (:assignment_id, :category_id)");
 		$categoryArray = explode(",", $data['categories']);
 
-        foreach ($categoryArray as $category) {
+		foreach ($categoryArray as $category) {
 			$stmt->bindParam(':assignment_id', $data['Id']);
 			$stmt->bindParam(':category_id', $category);
 			$stmt->execute();
 		}
-	
+
 		// Update weeks in the assignment_weeks table
 		$stmt = $this->pdo->prepare("DELETE FROM assignment_weeks WHERE assignment_id = :assignment_id");
 		$stmt->bindParam(':assignment_id', $data['Id']);
 		$stmt->execute();
-	
+
 		$stmt = $this->pdo->prepare("INSERT INTO assignment_weeks (assignment_id, week_num)
 		VALUES (:assignment_id, :week_num)");
 		$weekNumArray = explode(",", $data['weeks']);
@@ -145,7 +145,7 @@ class Assignment
 		$stmt = $this->pdo->prepare("DELETE FROM groupsassignments WHERE Assignment = :Assignment");
 		$stmt->bindParam(':Assignment', $data['Id']);
 		$stmt->execute();
-	
+
 		// Update group assignments
 		require_once('./Group.class.php');
 		$group = new GROUP($this->pdo);
@@ -158,40 +158,40 @@ class Assignment
 			"friday" => 5,
 			"saturday" => 6
 		];
-	
+
 		// Get the start week
 		$startWeek = $this->getstartweek();
 		$startDay = $startWeek[0]["Day"];
 		$groupsSlots = json_decode($group->getAll(), true);
-	
+
 		foreach ($groupsSlots as $groupSlot) {
 			foreach ($groupSlot["Slots"] as $slot) {
 				$targetDay = $slot["Day"];
 				$StartTime = $slot["StartTime"];
 				$EndTime = $slot["EndTime"];
 			}
-	
+
 			foreach ($weekNumArray as $weekNum) {
 				$wantedDay = $this->getWantedDay($startDay, $weekNum, $targetDay);
 				$open = new DateTime($wantedDay . ' ' . $StartTime);
 				$open = $open->format('Y-m-d H:i:s');
 				$close = new DateTime($wantedDay . ' ' . $EndTime);
 				$close = $close->format('Y-m-d H:i:s');
-	
+
 				$this->helpers->prepareAndBind("INSERT INTO GroupsAssignments (`open`, `close`, `Assignment`, `Group`,`week_num`) VALUES", [
 					"open" => $open,
 					"close" => $close,
 					"assignment" => $data['Id'],
 					"group" => $groupSlot["Id"],
-					"week_num"=>$weekNum,
+					"week_num" => $weekNum,
 				], true);
 			}
 		}
-	
+
 		return true;
 	}
-	
-	
+
+
 	public function getWantedDay($startDay, $weeknum, $targetDay)
 	{
 		$startDate = new DateTime($startDay);
@@ -234,7 +234,8 @@ class Assignment
 		$assignmentData['categories'] = $responses;
 		return $assignmentData;
 	}
-	public function getSingleAssignmentData($assignmentId){
+	public function getSingleAssignmentData($assignmentId)
+	{
 		$stmt = $this->pdo->prepare("SELECT Name, Topic, maxLimitImages FROM assignments WHERE Id=:id;");
 		$stmt->bindParam(":id", $assignmentId);
 		$stmt->execute();
@@ -594,24 +595,25 @@ class Assignment
 		}
 		return $Assignments;
 	}
-	public function updateStartWeek($day) {
+	public function updateStartWeek($day)
+	{
 
 
 		// Convert array to string and format date
 		$formattedDay = date('Y-m-d', strtotime(is_array($day) ? implode('', $day) : $day));
-	
+
 		// Update the database
 		$stmt = $this->pdo->prepare("UPDATE startweek SET Day = :day WHERE Id=1");
 		$stmt->bindParam(':day', $formattedDay);
 		$stmt->execute();
-	
+
 		$startWeek = $this->getstartweek();
 		$startDay = $startWeek[0]["Day"];
-	
+
 		$stmt = $this->pdo->prepare("SELECT Id FROM assignments");
 		$stmt->execute();
 		$assignmentIds = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	
+
 		foreach ($assignmentIds as $assid) {
 			$assignmentid = $assid["Id"];
 			$stmt = $this->pdo->prepare("SELECT week_num FROM assignment_weeks WHERE assignment_id = :assignment_id;");
@@ -619,29 +621,29 @@ class Assignment
 			$stmt->execute();
 			$weekNums = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			$weekNumArray = array_column($weekNums, 'week_num');
-	
+
 			// Get groups data and slots
 			require_once('./Group.class.php');
 			$group = new GROUP($this->pdo);
-	
+
 			$groupsSlots = json_decode($group->getAll(), true);
-	
+
 			foreach ($groupsSlots as $groupSlot) {
 				foreach ($groupSlot["Slots"] as $slot) {
 					$targetDay = $slot["Day"];
 					$StartTime = $slot["StartTime"];
 					$EndTime = $slot["EndTime"];
 				}
-	
+
 				foreach ($weekNumArray as $weekNum) {
 					$wantedDay = $this->getWantedDay($startDay, $weekNum, $targetDay);
-	
+
 					$open = new DateTime($wantedDay . ' ' . $StartTime);
 					$open = $open->format('Y-m-d H:i:s');
-	
+
 					$close = new DateTime($wantedDay . ' ' . $EndTime);
 					$close = $close->format('Y-m-d H:i:s');
-	
+
 					// Check if the record exists
 					$stmt = $this->pdo->prepare("SELECT COUNT(*) FROM groupsassignments WHERE `Assignment` = :assignmentid AND `Group` = :groupid AND `week_num` = :week_num");
 					$stmt->bindParam(':assignmentid', $assignmentid, PDO::PARAM_INT);
@@ -649,7 +651,7 @@ class Assignment
 					$stmt->bindParam(':week_num', $weekNum, PDO::PARAM_INT);
 					$stmt->execute();
 					$exists = $stmt->fetchColumn() > 0;
-	
+
 					if ($exists) {
 						// Update existing record
 						$stmt = $this->pdo->prepare("UPDATE groupsassignments SET `open` = :open, `close` = :close WHERE `Assignment` = :assignmentid AND `Group` = :groupid AND `week_num` = :week_num");
@@ -657,7 +659,7 @@ class Assignment
 						// Insert new record
 						$stmt = $this->pdo->prepare("INSERT INTO groupsassignments (`Assignment`, `Group`, `open`, `close`, `week_num`) VALUES (:assignmentid, :groupid, :open, :close, :week_num)");
 					}
-	
+
 					// Bind parameters and execute
 					try {
 						$stmt->bindParam(':assignmentid', $assignmentid, PDO::PARAM_INT);
@@ -674,11 +676,6 @@ class Assignment
 		}
 		return true;
 	}
-	
-	
-	
-	
-	
 	public function getstartweek()
 	{
 		$stmt = $this->pdo->prepare("SELECT * from startweek;");
@@ -722,7 +719,7 @@ class Assignment
 		return true;
 	}
 
-	public function getSubmissionsByAssignmentId($assignmentId)
+	public function getSubmissionsByAssignmentId(int $assignmentId)
 	{
 		// Prepare the initial statement to get submissions
 		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
@@ -731,6 +728,24 @@ class Assignment
 		], $stmt, true);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		return $submissions;
+	}
+	public function getFullSubmissionDataByAssignmentId(int $assignmentId)
+	{
+		$submissions = $this->getSubmissionsByAssignmentId($assignmentId);
+		$responseData = [];
+		$userClass = new USER(($this->pdo));
+		foreach ($submissions as $submission) {
+			$userData = $userClass->getUser($submission['StudentId'], 'Id');
+
+			$userData["submission"] = $submission["Id"];
+			$userData["Grade"] = $this->getGrade($submission["Id"]);
+			$userData["submitTime"] = $submission["submitTime"];
+
+			$userData["weekNum"] = $submission["weekNum"];
+			if ($userData)
+				$responseData[] = $userData;
+		}
+		return $responseData;
 	}
 	public function getGrade($submission)
 	{
@@ -752,6 +767,11 @@ class Assignment
 		$stmt->bindParam(":submission", $submission);
 		$stmt->execute();
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($result as &$image) {
+			$stmt = $this->pdo->prepare("SELECT Name from categories Where Id=:selected");
+			$stmt->execute([":selected" => $image["CategoryId"]]);
+			$image["CategoryName"] = $stmt->fetchColumn();
+		}
 		return $result;
 	}
 	public function GetSubmissionByUserAndAssignment($user, $assignment)
