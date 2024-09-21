@@ -63,7 +63,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode(["msg" => "All files uploaded successfully."]);
         break;
       case "newSubmission":
-        $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"]);
+        $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"],$_POST["weekNum"]);
         echo $done ? $pdo->lastInsertId() : "Error on adding the submission";
         break;
       case "EvaluateImage":
@@ -226,6 +226,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $res = $assignment->GetSubmissionByUserAndAssignment($_GET["userId"], $_GET["assignmentId"]);
         echo json_encode($res);
         break;
+      case "getSubmissionUserAssignmentWeek":
+        $res = $assignment->getSubmissionUserAssignmentWeek($_GET["userId"], $_GET["assignmentId"], $_GET["weekNum"]);
+        echo json_encode($res);
+        break;
+      
       case "GetSubmissionByUser":
         if (isset($_GET["userId"])) {
           $res = $assignment->GetSubmissionByUser($_GET["userId"]);

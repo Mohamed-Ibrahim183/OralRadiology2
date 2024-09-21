@@ -483,11 +483,12 @@ class Assignment
 
 		return $fileCount;
 	}
-	public function addNewSubmission($pdo, $student, $assignment)
+	public function addNewSubmission($pdo, $student, $assignment,$week)
 	{
-		$this->helpers->prepareAndBind("INSERT into submissions (StudentId, assignmentId) Values", [
+		$this->helpers->prepareAndBind("INSERT into submissions (StudentId, assignmentId, weekNum) Values", [
 			"student" => $student,
-			$assignment => $assignment
+			$assignment => $assignment,
+			"weekNum" => $week
 		], true);
 		return true;
 	}
@@ -572,6 +573,7 @@ class Assignment
 			// Add the open and close attributes to the assignment
 			$newAssignment['open'] = $assignment['open'];
 			$newAssignment['close'] = $assignment['close'];
+			$newAssignment['week_num'] = $assignment['week_num'];
 
 			$assignmentList[] = $newAssignment;
 		}
@@ -765,6 +767,19 @@ class Assignment
 		foreach ($submissions as &$submission)
 			$submission['Grade'] = $this->getGrade($submission['Id']);
 		return $submissions;
+	}
+	public function getSubmissionUserAssignmentWeek($user, $assignment, $week){
+		$stmt = $this->pdo->prepare(("SELECT * FROM submissions  WHERE StudentId=:user AND assignmentId=:assignment AND weekNum=:week;"));
+		$this->helpers->bindParams([
+			"user" => $user,
+			"assignment" => $assignment,
+			"week" => $week
+		], $stmt, true);
+		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		if(count($submissions)>0){
+			return true;
+		}
+		return false; 
 	}
 	public function GetSubmissionByUser($user)
 	{
