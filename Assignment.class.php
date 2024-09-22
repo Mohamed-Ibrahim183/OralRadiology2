@@ -493,7 +493,7 @@ class Assignment
 		], true);
 		return true;
 	}
-	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission)
+	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission ,$weekNum)
 	{
 		$stmt = $this->pdo->prepare("SELECT Id from categories where Name=:category;");
 		$this->helpers->bindParams([
@@ -531,13 +531,15 @@ class Assignment
 		if (move_uploaded_file($fileTmpName, $targetFile)) {
 			// Update database with file path
 			$this->helpers->prepareAndBind(
-				"INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId, submissionId) VALUES",
+				"INSERT INTO assignmentimages (Path, StudentID, AssignmentId, CategoryId, submissionId, weekNum) VALUES",
 				[
 					"path" => $targetFile,
 					"student" => $studentId,
 					"assignment" => $assignmentId,
 					"category" => $category,
-					"submission" => $submission
+					"submission" => $submission,
+					"weekNum" => $weekNum
+
 				],
 				true
 			);
@@ -800,6 +802,17 @@ class Assignment
 			return true;
 		}
 		return false; 
+	}
+	public function getSubmittedAssignmentCategories($user, $assignment,  $week){
+		$stmt = $this->pdo->prepare(("SELECT CategoryId FROM assignmentimages  WHERE StudentId=:user AND assignmentId=:assignment AND weekNum=:week;"));
+		$this->helpers->bindParams([
+			"user" => $user,
+			"assignment" => $assignment,
+			"week" => $week
+		], $stmt, true);
+		$AssignmentCategories = $stmt->fetchAll(PDO::FETCH_COLUMN, 0); 
+
+		return $AssignmentCategories;
 	}
 	public function GetSubmissionByUser($user)
 	{

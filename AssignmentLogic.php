@@ -48,6 +48,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $assignmentId = $_POST['assignmentId'];
         $studentId = $_POST['StudentId'];
         $category = json_decode($_POST['category'], true);
+        $weekNum = $_POST['weekNum'];
 
         $image = [
           "name" => $_FILES['file']['name'],
@@ -55,7 +56,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           "tmp_name" => $_FILES['file']['tmp_name'],
           "type" => $_FILES['file']['type']
         ];
-        $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $_POST["category"], $_POST["submission"]); // fix the cat
+        $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $_POST["category"], $_POST["submission"],$weekNum); // fix the cat
         if ($result != "Done") {
           echo json_encode(["msg" => $result]);
           exit;
@@ -182,7 +183,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         $res = $assignment->getSubmissionUserAssignmentWeek($_GET["userId"], $_GET["assignmentId"], $_GET["weekNum"]);
         echo json_encode($res);
         break;
-      
+      case "getSubmittedAssignmentCategories":
+        echo json_encode($assignment->getSubmittedAssignmentCategories($_GET["userId"], $_GET["assignmentId"],$_GET["weekNum"]));
+        break;
       case "GetSubmissionByUser":
         if (isset($_GET["userId"])) {
           $res = $assignment->GetSubmissionByUser($_GET["userId"]);
