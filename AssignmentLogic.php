@@ -56,7 +56,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
           "tmp_name" => $_FILES['file']['tmp_name'],
           "type" => $_FILES['file']['type']
         ];
-        $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $_POST["category"], $_POST["submission"],$weekNum); // fix the cat
+        $result = $assignment->uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $_POST["category"], $_POST["submission"], $weekNum); // fix the cat
         if ($result != "Done") {
           echo json_encode(["msg" => $result]);
           exit;
@@ -64,7 +64,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode(["msg" => "All files uploaded successfully."]);
         break;
       case "newSubmission":
-        $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"],$_POST["weekNum"]);
+        $done = $assignment->addNewSubmission($pdo, $_POST["studentId"], $_POST["assignmentId"], $_POST["weekNum"]);
         echo $done ? $pdo->lastInsertId() : "Error on adding the submission";
         break;
       case "EvaluateImage":
@@ -145,38 +145,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($assignment->getAssignmentForUser($_GET["userId"]));
         break;
       case "GetSubmissionForUserReport":
-        $submissions = $assignment->GetSubmissionById($_GET["StudentId"]);
-        foreach ($submissions as &$submission) {
-          // 1. set grade for the submission
-          if (!isset($submission["Id"]))
-            continue;
 
-          $submission["Grade"] = $assignment->getGrade($submission["Id"]);
-
-          // 2. get assignment Name for each submission
-          $query = "SELECT * from assignments where Id=:selectedAssignment;";
-          $stmt = $pdo->prepare($query);
-          $stmt->bindParam(":selectedAssignment", $submission["assignmentId"]);
-          $stmt->execute();
-          $currentAssignment = $stmt->fetch(PDO::FETCH_ASSOC);
-          // print_r($currentAssignment);
-          $submission["assignmentName"] = $currentAssignment["Name"];
-
-          // 3. get images for each submission
-          $images = $assignment->getAssignmentImages($submission["Id"]);
-          foreach ($images as &$image) {
-            $query = "SELECT Name from categories where Id=:selected;";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindParam(":selected", $image["CategoryId"]);
-            $stmt->execute();
-            $category = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $image["Category"] = $category["Name"];
-          }
-          $submission["images"] = $images;
-        }
-
-        echo json_encode($submissions);
+        echo json_encode($assignment->GetSubmissionForUserReport($_GET["StudentId"]));
+        break;
+      case "getBestGradeStudentAssignment":
+        echo json_encode($assignment->getBestGrade($_GET["assignmentId"], $_GET["studentId"]));
         break;
       case "GetSubmissionById":
         echo json_encode($assignment->GetSubmissionById($_GET["StudentId"]));
@@ -190,7 +163,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($res);
         break;
       case "getSubmittedAssignmentCategories":
-        echo json_encode($assignment->getSubmittedAssignmentCategories($_GET["userId"], $_GET["assignmentId"],$_GET["weekNum"]));
+        echo json_encode($assignment->getSubmittedAssignmentCategories($_GET["userId"], $_GET["assignmentId"], $_GET["weekNum"]));
         break;
       case "GetSubmissionByUser":
         if (isset($_GET["userId"])) {
