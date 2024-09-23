@@ -190,8 +190,6 @@ class Assignment
 
 		return true;
 	}
-
-
 	public function getWantedDay($startDay, $weeknum, $targetDay)
 	{
 		$startDate = new DateTime($startDay);
@@ -270,6 +268,13 @@ class Assignment
 	public function fetchAllAssignments()
 	{
 		$stmt = $this->pdo->prepare("SELECT * FROM assignments");
+		$query = "SELECT * FROM assignments";
+		$stmt->execute();
+		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+	}
+	public function getAllAssignmentsNames()
+	{
+		$stmt = $this->pdo->prepare("SELECT Id, Name FROM assignments");
 		$query = "SELECT * FROM assignments";
 		$stmt->execute();
 		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
