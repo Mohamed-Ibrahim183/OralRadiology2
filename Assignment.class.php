@@ -340,6 +340,46 @@ class Assignment
 		}
 		return $assignments;
 	}
+
+	public function getBestGrade(int $assignmentId, int $studentId): int
+	{
+		$bestGrade = -1;
+
+		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($assignmentId, $studentId);
+		foreach ($submissions as &$sub) {
+			if ($sub["BestGrade"])
+				$bestGrade = $sub["Grade"];
+		}
+		return $bestGrade;
+	}
+	public function GetSubmissionForUserReport(int $studentId)
+	{
+		$stmt = $this->pdo->prepare("SELECT * from assignments");
+		$stmt->execute();
+		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		$submissions = [];
+		foreach ($assignments as $assignment) {
+			$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignment["Id"]);
+			foreach ($submissions as &$sub) {
+				// get assignment Name
+				$sub["assignmentName"] = $assignment["Name"];
+				// get submissions images
+				$images = $this->getAssignmentImages($sub["Id"]);
+				foreach ($images as &$image) {
+					$query = "SELECT Name from categories where Id=:selected;";
+					$stmt = $this->pdo->prepare($query);
+					$stmt->bindParam(":selected", $image["CategoryId"]);
+					$stmt->execute();
+					$category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+					$image["Category"] = $category["Name"];
+				}
+				$sub["images"] = $images;
+			}
+		}
+
+		return $submissions;
+	}
 	public function getMaxGradeSubmissions(array $submissions)
 	{
 		$maxGrade = 0;
@@ -484,7 +524,7 @@ class Assignment
 
 		return $fileCount;
 	}
-	public function addNewSubmission($pdo, $student, $assignment,$week)
+	public function addNewSubmission($pdo, $student, $assignment, $week)
 	{
 		$this->helpers->prepareAndBind("INSERT into submissions (StudentId, assignmentId, weekNum) Values", [
 			"student" => $student,
@@ -493,7 +533,7 @@ class Assignment
 		], true);
 		return true;
 	}
-	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission ,$weekNum)
+	public function uploadAssignmentImage($pdo, $image, $studentId, $assignmentId, $category, $submission, $weekNum)
 	{
 		$stmt = $this->pdo->prepare("SELECT Id from categories where Name=:category;");
 		$this->helpers->bindParams([
@@ -733,6 +773,25 @@ class Assignment
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		return $submissions;
 	}
+	public function getSubmissionsByStudentAndAssignmentToBest(int $studentId, int $assignmentId)
+	{
+		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE StudentId = :student and assignmentId=:assignment");
+		$stmt->execute([":student" => $studentId, ":assignment" => $assignmentId]);
+		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		$maxGrade = -1;
+		$maxKey = "";
+		foreach ($submissions as $key => &$sub) {
+			$sub["Grade"] = $this->getGrade($sub["Id"]);
+			if ($sub["Grade"]["Total"] > $maxGrade) {
+				$maxGrade = $sub["Grade"]["Total"];
+				$maxKey = $key;
+			}
+			$sub["BestGrade"] = false;
+		}
+		if ($maxKey !== "")
+			$submissions[$maxKey]["BestGrade"]  = true;
+		return $submissions;
+	}
 	public function getFullSubmissionDataByAssignmentId(int $assignmentId)
 	{
 		$submissions = $this->getSubmissionsByAssignmentId($assignmentId);
@@ -750,6 +809,12 @@ class Assignment
 				$responseData[] = $userData;
 		}
 		return $responseData;
+		// $stmt = $this->pdo->prepare("SELECT * from assignments");
+		// $stmt->execute();
+		// $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		// foreach($assignments as $assignment){
+
+		// }
 	}
 	public function getGrade($submission)
 	{
@@ -790,7 +855,8 @@ class Assignment
 			$submission['Grade'] = $this->getGrade($submission['Id']);
 		return $submissions;
 	}
-	public function getSubmissionUserAssignmentWeek($user, $assignment, $week){
+	public function getSubmissionUserAssignmentWeek($user, $assignment, $week)
+	{
 		$stmt = $this->pdo->prepare(("SELECT * FROM submissions  WHERE StudentId=:user AND assignmentId=:assignment AND weekNum=:week;"));
 		$this->helpers->bindParams([
 			"user" => $user,
@@ -798,19 +864,20 @@ class Assignment
 			"week" => $week
 		], $stmt, true);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		if(count($submissions)>0){
+		if (count($submissions) > 0) {
 			return true;
 		}
-		return false; 
+		return false;
 	}
-	public function getSubmittedAssignmentCategories($user, $assignment,  $week){
+	public function getSubmittedAssignmentCategories($user, $assignment,  $week)
+	{
 		$stmt = $this->pdo->prepare(("SELECT CategoryId FROM assignmentimages  WHERE StudentId=:user AND assignmentId=:assignment AND weekNum=:week;"));
 		$this->helpers->bindParams([
 			"user" => $user,
 			"assignment" => $assignment,
 			"week" => $week
 		], $stmt, true);
-		$AssignmentCategories = $stmt->fetchAll(PDO::FETCH_COLUMN, 0); 
+		$AssignmentCategories = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
 
 		return $AssignmentCategories;
 	}
