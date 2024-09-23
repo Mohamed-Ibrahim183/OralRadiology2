@@ -264,7 +264,12 @@ class Assignment
 		$assignmentData['weeks'] = $weeks;
 		return json_decode(json_encode($assignmentData));
 	}
-
+	public function getAllStudentsAssignmentsBestGrades()
+	{
+		$stmt = $this->pdo->prepare("SELECT Id, MSAId FROM users WHERE Type='Student'");
+		$stmt->execute();
+		$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	}
 	public function fetchAllAssignments()
 	{
 		$stmt = $this->pdo->prepare("SELECT * FROM assignments");

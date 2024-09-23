@@ -89,6 +89,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "getAllAssignmentsNames":
         echo $assignment->getAllAssignmentsNames();
         break;
+      case "getAllStudentsAssignmentsBestGrades":
+         echo $assignment->getAllStudentsAssignmentsBestGrades();
+         break;
       case "getSingleAssignmentData":
         if (isset($_GET['assignmentId'])) {
           $assignmentId = intval($_GET['assignmentId']);
