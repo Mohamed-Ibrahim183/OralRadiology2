@@ -284,6 +284,33 @@ class Assignment
 		$stmt->execute();
 		return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 	}
+	public function getGradesRows()
+	{
+		// Prepare the statement to get students once
+		$stmt = $this->pdo->prepare("SELECT Id, MSAId, Name FROM users WHERE Type='Student'");
+		$stmt->execute();
+		$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		echo("students");
+		print_r($students);
+		// Prepare the statement to get assignments once
+		$stmtAssignments = $this->pdo->prepare("SELECT Id FROM assignments");
+		$stmtAssignments->execute();
+		$assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
+		echo("assignments");
+		print_r($assignments);
+		// Loop through each student
+		foreach ($students as $student) {
+			$assGrades=[];
+			foreach($assignments as $ass){
+				$assGrades[] = (int)$this->getBestGrade($ass["Id"], $student["Id"]);
+
+			}
+			print_r($assGrades);
+		}
+
+		//print_r($students);
+		//return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+	}
 	public function uploadImages($files, $assignmentId, $studentId, $maxImages, $ASName, $MSAId)
 	{
 		$uploadedFiles = 0;
@@ -353,9 +380,11 @@ class Assignment
 
 	public function getBestGrade(int $assignmentId, int $studentId): int
 	{
-		$bestGrade = -1;
+		$bestGrade = 0;
 
-		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($assignmentId, $studentId);
+		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest( $assignmentId, $studentId);
+		echo("submissions for student i");
+		print_r($submissions);
 		foreach ($submissions as &$sub) {
 			if ($sub["BestGrade"])
 				$bestGrade = $sub["Grade"];

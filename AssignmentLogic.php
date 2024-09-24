@@ -89,6 +89,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "getAllAssignmentsNames":
         echo $assignment->getAllAssignmentsNames();
         break;
+      case "getGradesRows":
+        echo $assignment->getGradesRows();
+        break;
       case "getAllStudentsAssignmentsBestGrades":
          echo $assignment->getAllStudentsAssignmentsBestGrades();
          break;
