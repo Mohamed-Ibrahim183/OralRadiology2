@@ -359,32 +359,46 @@ class Assignment
 	}
 	public function GetSubmissionForUserReport(int $studentId)
 	{
+		// Fetch all assignments
 		$stmt = $this->pdo->prepare("SELECT * from assignments");
 		$stmt->execute();
 		$assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		$submissions = [];
-		foreach ($assignments as $assignment) {
-			$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignment["Id"]);
-			foreach ($submissions as &$sub) {
-				// get assignment Name
-				$sub["assignmentName"] = $assignment["Name"];
-				// get submissions images
-				$images = $this->getAssignmentImages($sub["Id"]);
-				foreach ($images as &$image) {
-					$query = "SELECT Name from categories where Id=:selected;";
-					$stmt = $this->pdo->prepare($query);
-					$stmt->bindParam(":selected", $image["CategoryId"]);
-					$stmt->execute();
-					$category = $stmt->fetch(PDO::FETCH_ASSOC);
 
-					$image["Category"] = $category["Name"];
+		$submissions = [];
+
+		foreach ($assignments as $assignment) {
+			// Get submissions by student and assignment
+			$subs = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignment["Id"]);
+
+			if (count($subs) > 0)
+				array_push($submissions, $subs);
+			// print_r($submissions);
+			foreach ($submissions as &$subArray) {
+				// Loop over submissions and check if 'Id' exists
+				foreach ($subArray as &$sub) {
+					if (isset($sub["Id"])) {  // Ensure 'Id' exists in the $sub array
+						// Get assignment name
+						$sub["assignmentName"] = $assignment["Name"];
+						// Get submission images
+						$images = $this->getAssignmentImages($sub["Id"]);
+						foreach ($images as &$image) {
+							$query = "SELECT Name FROM categories WHERE Id=:selected;";
+							$stmt = $this->pdo->prepare($query);
+							$stmt->bindParam(":selected", $image["CategoryId"]);
+							$stmt->execute();
+							$category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+							$image["Category"] = $category["Name"];
+						}
+						$sub["images"] = $images;
+					}
 				}
-				$sub["images"] = $images;
 			}
 		}
 
-		return $submissions;
+		return $submissions[0];
 	}
+
 	public function getMaxGradeSubmissions(array $submissions)
 	{
 		$maxGrade = 0;

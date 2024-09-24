@@ -142,6 +142,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($assignment->getAssignmentForUser($_GET["userId"]));
         break;
       case "GetSubmissionForUserReport":
+
         echo json_encode($assignment->GetSubmissionForUserReport($_GET["StudentId"]));
         break;
       case "getBestGradeStudentAssignment":
