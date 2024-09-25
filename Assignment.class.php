@@ -378,13 +378,10 @@ class Assignment
 		return $assignments;
 	}
 
-	public function getBestGrade(int $assignmentId, int $studentId): int
+	public function getBestGrade(int $assignmentId, int $studentId): array | int
 	{
-		$bestGrade = 0;
-
-		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest( $assignmentId, $studentId);
-		echo("submissions for student i");
-		print_r($submissions);
+		$bestGrade = -1;
+		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignmentId);
 		foreach ($submissions as &$sub) {
 			if ($sub["BestGrade"])
 				$bestGrade = $sub["Grade"];
