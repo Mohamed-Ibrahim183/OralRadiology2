@@ -290,26 +290,26 @@ class Assignment
 		$stmt = $this->pdo->prepare("SELECT Id, MSAId, Name FROM users WHERE Type='Student'");
 		$stmt->execute();
 		$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		echo("students");
-		print_r($students);
-		// Prepare the statement to get assignments once
+
 		$stmtAssignments = $this->pdo->prepare("SELECT Id FROM assignments");
 		$stmtAssignments->execute();
 		$assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
-		echo("assignments");
-		print_r($assignments);
-		// Loop through each student
+        $newStudentsArray=[];
 		foreach ($students as $student) {
 			$assGrades=[];
 			foreach($assignments as $ass){
-				$assGrades[] = (int)$this->getBestGrade($ass["Id"], $student["Id"]);
+				$assGrade=$this->getBestGrade($ass["Id"], $student["Id"]);
+				$assGrade["assignmentId"]=$ass["Id"];
+				$assGrades[] = $assGrade;
 
 			}
-			print_r($assGrades);
+			$student["Grades"]=$assGrades;
+			// print_r($student);
+			$newStudentsArray[]=$student;
 		}
 
 		//print_r($students);
-		//return json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+		return json_encode($newStudentsArray);
 	}
 	public function uploadImages($files, $assignmentId, $studentId, $maxImages, $ASName, $MSAId)
 	{
@@ -380,12 +380,20 @@ class Assignment
 
 	public function getBestGrade(int $assignmentId, int $studentId): array | int
 	{
-		$bestGrade = -1;
+		$bestGrade = 0;
 		$submissions = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignmentId);
+
 		foreach ($submissions as &$sub) {
 			if ($sub["BestGrade"])
 				$bestGrade = $sub["Grade"];
 		}
+		if ($bestGrade === 0) {
+			$bestGrade = [
+				"Total" => 0,
+				"count" => 0,
+			];
+		}
+		
 		return $bestGrade;
 	}
 	public function GetSubmissionForUserReport(int $studentId)
