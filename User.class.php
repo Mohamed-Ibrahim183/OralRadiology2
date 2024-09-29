@@ -16,48 +16,6 @@ class USER
     $this->pdo = $pdo;
     $this->helpers = new Helpers($pdo);
   }
-  public function Insert($postKeys, $tableColumns, $tableName, $hashName)
-  {
-    $ready = true;
-    foreach ($postKeys as $key => $value) {
-      if (htmlspecialchars(trim($value)) === "")
-        $ready = false;
-    }
-    if ($ready === true) {
-      // $this->Id = $postKeys["Id"];
-      $this->Password = $postKeys["Password"];
-      $this->MSAId = $postKeys["MSAId"];
-      $this->Name = $postKeys["Name"];
-      $this->Email = $postKeys["Email"];
-      $this->Type = $postKeys["Type"];
-      if (isset($postKeys["PersonalImage"])) {
-        $this->PersonalImage = $postKeys["PersonalImage"];
-      }
-    }
-    if ($ready === true) {
-      // require("./includes.inc.php");
-      if ($hashName !== "")
-        $postKeys[$hashName] = password_hash($postKeys[$hashName], PASSWORD_BCRYPT, ['cost' => 12]);
-
-      $query = "INSERT INTO $tableName (";
-      $query .= implode(", ", $tableColumns);
-      $query .= ") VALUES (";
-      foreach ($tableColumns as $key => $value) {
-        $variable = htmlspecialchars(trim($postKeys[$value]));
-        $query .= "'$variable', ";
-      }
-      $query = rtrim($query, ", "); // Remove trailing comma
-      $query .= ")";
-
-      $stmt = $this->pdo->prepare($query);
-      $stmt->execute();
-      $this->lastIndex = $this->pdo->lastInsertId();
-      $this->Id = $this->pdo->lastInsertId();
-
-      return $this->pdo->lastInsertId();
-    }
-    return -1;
-  }
   public function changePassword($data)
   {
     $query = "UPDATE users SET Password=:pass WHERE Id=:id";
@@ -91,14 +49,21 @@ class USER
     $stmt->bindParam(":selected", $value);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
     if ($result) {
-      $this->Id = $result["Id"];
-      $this->Password = $result["Password"];
-      $this->MSAId = $result["MSAId"];
-      $this->Name = $result["Name"];
-      $this->Email = $result["Email"];
-      $this->Type = $result["Type"];
-      $this->PersonalImage = $result["PersonalImage"];
+      // 2. get the id of the group
+      $stmt = $this->pdo->prepare("SELECT GroupId from usersingroups WHERE userId=:user");
+      $stmt->execute(["user" => $result["Id"]]);
+      $groupId = $stmt->fetch(PDO::FETCH_ASSOC);
+      if ($groupId["GroupId"]) {
+        $stmt = $this->pdo->prepare("SELECT Name FROM groups WHERE Id=:groupId");
+        $stmt->execute(["groupId" => $groupId["GroupId"]]);
+        $groupName = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result["Group"] = $groupName["Name"];
+      }
+
+
       unset($result["Password"]);
       return $result;
     }
@@ -119,23 +84,22 @@ class USER
     $allowedTypes = array("image/jpeg", "image/png", "image/gif");
 
     // Validate file type
-    if (!in_array($fileType, $allowedTypes)) {
+    if (!in_array($fileType, $allowedTypes))
       return "Error: File is not an image.";
-    }
+
 
     // Validate file size
-    if ($fileSize > $maxFileSize) {
+    if ($fileSize > $maxFileSize)
       return "Error: File size exceeds the maximum limit (5MB).";
-    }
+
 
     // Directory for uploads
     // $targetDir = "../uploads/" . $userID;
 
     // Create uploads directory if it doesn't exist
     if (!is_dir($targetDir)) {
-      if (!mkdir($targetDir, 0777, true)) {
+      if (!mkdir($targetDir, 0777, true))
         return "Error: Failed to create directory.";
-      }
     }
 
     // Delete existing file with the name "PersonalImage"
@@ -149,36 +113,23 @@ class USER
     $targetFile = $targetDir . "/PersonalImage." . $extension;
 
     // Move uploaded file to target directory
+
     if (move_uploaded_file($fileTmpName, $targetFile)) {
+
       // Update database with file path
       $query = "UPDATE users SET personalImage = :target WHERE Id = :selected;";
       $stmt = $this->pdo->prepare($query);
       $stmt->bindParam(":target", $targetFile);
       $stmt->bindParam(":selected", $id);
-      if ($stmt->execute()) {
+      // $stmt->execute();
+      if ($stmt->execute())
         return $targetFile;
-      } else {
+      else
         return "Error: Database update failed.";
-      }
-    } else {
+    } else
       return "Error: Failed to move uploaded file.";
-    }
   }
 
-  public function getMSAId()
-  {
-    return $this->MSAId;
-  }
-  public function setMSAId($newID)
-  {
-    require_once("./DataBase.class.php");
-    $db = new DATABASE();
-    $pdo = $db->createConnection("oralradiology");
-    $result = $this->getUser($newID, "MSAId");
-    if ($result) {
-      // done
-    }
-  }
   public function Login($identifier, $password)
   {
     $query = "SELECT * from users where ";
@@ -188,20 +139,24 @@ class USER
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($user) {
-      if (password_verify($password, $user["Password"]) || $password === $user["Password"])
+      if (password_verify($password, $user["Password"]) || $password === $user["Password"]) {
         unset($user["Password"]);
-      else
+
+        // 2. get the id of the group
+        $stmt = $this->pdo->prepare("SELECT GroupId from usersingroups WHERE userId=:user");
+        $stmt->execute(["user" => $user["Id"]]);
+        $groupId = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (isset($groupId["GroupId"]) && $groupId["GroupId"]) {
+          $stmt = $this->pdo->prepare("SELECT Name FROM groups WHERE Id=:groupId");
+          $stmt->execute(["groupId" => $groupId["GroupId"]]);
+          $groupName = $stmt->fetch(PDO::FETCH_ASSOC);
+          $user["Group"] = $groupName["Name"];
+        }
+      } else
         return ["Error" => "Password for $identifier is incorrect"];
     } else
       return ["Error" => "User Not Found [Contact With Admin]"];
     return $user;
-  }
-
-  public function getIMage($id)
-  {
-    $result = $this->getUser($id, "Id");
-    if ($this->PersonalImage)
-      return $this->PersonalImage;
   }
   public function getAll()
   {

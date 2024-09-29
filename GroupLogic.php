@@ -19,7 +19,7 @@ switch ($_SERVER["REQUEST_METHOD"]) {
   case "POST":
     switch ($Action) {
       case "Insert":
-       echo $group->Insert($_POST);
+        echo $group->Insert($_POST);
         break;
       case "Delete":
         $group->Delete($_POST);
@@ -42,7 +42,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo $data !== null ? json_encode($data) : "error";
         break;
       case "UsersMails":
-        // check if this endPoint is exist or not #Mohamed
         $result = $group->getUsersInGroup($QueryArr[-1]);
         echo json_encode($result);
         break;

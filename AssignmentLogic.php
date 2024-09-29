@@ -93,8 +93,8 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo $assignment->getGradesRows();
         break;
       case "getAllStudentsAssignmentsBestGrades":
-         echo $assignment->getAllStudentsAssignmentsBestGrades();
-         break;
+        echo $assignment->getAllStudentsAssignmentsBestGrades();
+        break;
       case "getSingleAssignmentData":
         if (isset($_GET['assignmentId'])) {
           $assignmentId = intval($_GET['assignmentId']);
@@ -148,7 +148,6 @@ switch ($_SERVER["REQUEST_METHOD"]) {
         echo json_encode($assignment->getAssignmentForUser($_GET["userId"]));
         break;
       case "GetSubmissionForUserReport":
-
         echo json_encode($assignment->GetSubmissionForUserReport($_GET["StudentId"]));
         break;
       case "getBestGradeStudentAssignment":

@@ -294,18 +294,17 @@ class Assignment
 		$stmtAssignments = $this->pdo->prepare("SELECT Id FROM assignments");
 		$stmtAssignments->execute();
 		$assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
-        $newStudentsArray=[];
+		$newStudentsArray = [];
 		foreach ($students as $student) {
-			$assGrades=[];
-			foreach($assignments as $ass){
-				$assGrade=$this->getBestGrade($ass["Id"], $student["Id"]);
-				$assGrade["assignmentId"]=$ass["Id"];
+			$assGrades = [];
+			foreach ($assignments as $ass) {
+				$assGrade = $this->getBestGrade($ass["Id"], $student["Id"]);
+				$assGrade["assignmentId"] = $ass["Id"];
 				$assGrades[] = $assGrade;
-
 			}
-			$student["Grades"]=$assGrades;
+			$student["Grades"] = $assGrades;
 			// print_r($student);
-			$newStudentsArray[]=$student;
+			$newStudentsArray[] = $student;
 		}
 
 		//print_r($students);
@@ -393,7 +392,7 @@ class Assignment
 				"count" => 0,
 			];
 		}
-		
+
 		return $bestGrade;
 	}
 	public function GetSubmissionForUserReport(int $studentId)
@@ -410,32 +409,26 @@ class Assignment
 			$subs = $this->getSubmissionsByStudentAndAssignmentToBest($studentId, $assignment["Id"]);
 
 			if (count($subs) > 0)
-				array_push($submissions, $subs);
-			// print_r($submissions);
-			foreach ($submissions as &$subArray) {
+				$submissions = array_merge($submissions, $subs);
+			foreach ($submissions as &$sub) {
 				// Loop over submissions and check if 'Id' exists
-				foreach ($subArray as &$sub) {
-					if (isset($sub["Id"])) {  // Ensure 'Id' exists in the $sub array
-						// Get assignment name
-						$sub["assignmentName"] = $assignment["Name"];
-						// Get submission images
-						$images = $this->getAssignmentImages($sub["Id"]);
-						foreach ($images as &$image) {
-							$query = "SELECT Name FROM categories WHERE Id=:selected;";
-							$stmt = $this->pdo->prepare($query);
-							$stmt->bindParam(":selected", $image["CategoryId"]);
-							$stmt->execute();
-							$category = $stmt->fetch(PDO::FETCH_ASSOC);
 
-							$image["Category"] = $category["Name"];
-						}
-						$sub["images"] = $images;
+				if (isset($sub["Id"])) {  // Ensure 'Id' exists in the $sub array
+					$images = $this->getAssignmentImages($sub["Id"]);
+					foreach ($images as &$image) {
+						$query = "SELECT Name FROM categories WHERE Id=:selected;";
+						$stmt = $this->pdo->prepare($query);
+						$stmt->bindParam(":selected", $image["CategoryId"]);
+						$stmt->execute();
+						$category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+						$image["Category"] = $category["Name"];
 					}
+					$sub["images"] = $images;
 				}
 			}
 		}
-
-		return $submissions[0];
+		return $submissions;
 	}
 
 	public function getMaxGradeSubmissions(array $submissions)
@@ -836,10 +829,16 @@ class Assignment
 		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE StudentId = :student and assignmentId=:assignment");
 		$stmt->execute([":student" => $studentId, ":assignment" => $assignmentId]);
 		$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		$stmt = $this->pdo->prepare("SELECT NAME from assignments where Id=:selected");
+		$stmt->execute([":selected" => $assignmentId]);
+		$name = $stmt->fetchColumn();
+
 		$maxGrade = -1;
 		$maxKey = "";
 		foreach ($submissions as $key => &$sub) {
 			$sub["Grade"] = $this->getGrade($sub["Id"]);
+			$sub["assignmentName"] = $name;
 			if ($sub["Grade"]["Total"] > $maxGrade) {
 				$maxGrade = $sub["Grade"]["Total"];
 				$maxKey = $key;

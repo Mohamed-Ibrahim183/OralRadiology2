@@ -49,4 +49,14 @@ class Helpers
     $stmt = $this->prepareAndBind($query, $params);
     return $stmt->execute();
   }
+
+  public function validData($data): bool
+  {
+    $ready = true;
+    foreach ($data as $value) {
+      if (trim($value) === "")
+        $ready = false;
+    }
+    return $ready;
+  }
 }

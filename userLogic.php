@@ -21,14 +21,6 @@ $Action = $QueryArr[0];
 switch ($_SERVER["REQUEST_METHOD"]) {
 	case "POST": // insert
 		switch ($Action) {
-			case "Insert":
-				$tableColumns = ["Password", "Type", "MSAId", "Name", "Email"];
-				$lastID = $user->Insert($_POST, $tableColumns, "users", "");
-				if (isset($_FILES["personalImage"])) {
-					$selectedUser = $user->getMSAId();
-					$user->uploadImage($_FILES["personalImage"], "../uploads/{$selectedUser}", $lastID);
-				}
-				break;
 			case "InsertMSAId":
 				$res = $user->insertByMSAId($_POST);
 				echo $res ? "INSERTED" : "ERROR";
