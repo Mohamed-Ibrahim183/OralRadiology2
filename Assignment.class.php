@@ -879,7 +879,7 @@ class Assignment
 
 		// }
 	}
-	public function getGrade($submission)
+	public function getGrade(int $submission)
 	{
 		$stmt = $this->pdo->prepare("SELECT * FROM assignmentimages WHERE submissionId=:selected;");
 		$this->helpers->bindParams([
@@ -890,7 +890,12 @@ class Assignment
 		foreach ($grades as $row)
 			$totalGrade += $row["Grade"];
 
-		return ["Total" => $totalGrade, "count" => count($grades)];
+		// 2. get the count of the categories
+		$stmt = $this->pdo->prepare("SELECT COUNT(*) from assignment_categories where assignment_id=:selected");
+		$stmt->execute([":selected" => $grades[0]["AssignmentId"]]);
+
+		return ["Total" => $totalGrade, "count" => $stmt->fetchColumn()];
+		// return ["Total" => $totalGrade, "count" => count($grades)];
 	}
 	public function getAssignmentImages($submission)
 	{
