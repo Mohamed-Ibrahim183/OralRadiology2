@@ -817,13 +817,22 @@ class Assignment
 			"Selected" => $imageId,
 			"Grade" => $grade
 		], $stmt, true);
+
+		// 1. get the submission id
+		$stmt = $this->pdo->prepare("SELECT submissionId from assignmentimages where Id=:imageId");
+		$stmt->execute([":imageId" => $imageId]);
+		$submissionId = $stmt->fetchColumn();
+		// 2. make the submission to be graded
+		$stmt = $this->pdo->prepare("UPDATE submissions set graded=:gradeState");
+		$stmt->execute([":gradeState" => 1]);
+
 		return true;
 	}
 
 	public function getSubmissionsByAssignmentId(int $assignmentId)
 	{
 		// Prepare the initial statement to get submissions
-		$stmt = $this->pdo->prepare("SELECT * FROM submissions WHERE assignmentId = :assignmentId");
+		$stmt = $this->pdo->prepare(query: "SELECT * FROM submissions WHERE assignmentId = :assignmentId");
 		$this->helpers->bindParams([
 			"assignmentId" => $assignmentId
 		], $stmt, true);
@@ -859,6 +868,7 @@ class Assignment
 	{
 		$submissions = $this->getSubmissionsByAssignmentId($assignmentId);
 		$responseData = [];
+		// print_r($submissions[0]);
 		$userClass = new USER(($this->pdo));
 		foreach ($submissions as $submission) {
 			$userData = $userClass->getUser($submission['StudentId'], 'Id');
@@ -866,18 +876,13 @@ class Assignment
 			$userData["submission"] = $submission["Id"];
 			$userData["Grade"] = $this->getGrade($submission["Id"]);
 			$userData["submitTime"] = $submission["submitTime"];
-
 			$userData["weekNum"] = $submission["weekNum"];
+			$userData["graded"] = $submission["graded"];
+
 			if ($userData)
 				$responseData[] = $userData;
 		}
 		return $responseData;
-		// $stmt = $this->pdo->prepare("SELECT * from assignments");
-		// $stmt->execute();
-		// $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		// foreach($assignments as $assignment){
-
-		// }
 	}
 	public function getGrade(int $submission)
 	{
