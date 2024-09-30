@@ -79,6 +79,9 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "updateStartWeek":
         echo $assignment->updateStartWeek($_POST);
         break;
+      case "setDoctorsComment":
+        echo json_encode($assignment->setDoctorsNote($_POST["submissionId"], $_POST["doctorComment"]));
+        break;
     }
 
   case 'GET':

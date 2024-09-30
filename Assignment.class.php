@@ -361,6 +361,12 @@ class Assignment
 		}
 		return $responses;
 	}
+	public function setDoctorsNote(int $submissionId, string $doctorComment)
+	{
+		$stmt = $this->pdo->prepare("UPDATE submissions SET DoctorComment=:comment WHERE Id=:selected");
+		$stmt->execute(["comment" => htmlspecialchars(trim($doctorComment)), "selected" => $submissionId]);
+		return "UPDATED";
+	}
 
 	public function assignmentSubmissionReport()
 	{
