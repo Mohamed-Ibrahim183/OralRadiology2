@@ -363,7 +363,7 @@ class Assignment
 	}
 	public function setDoctorsNote(int $submissionId, string $doctorComment)
 	{
-		$stmt = $this->pdo->prepare("UPDATE submissions SET DoctorComment=:comment WHERE Id=:selected");
+		$stmt = $this->pdo->prepare("UPDATE submissions SET DoctorsNote=:comment WHERE Id=:selected");
 		$stmt->execute(["comment" => htmlspecialchars(trim($doctorComment)), "selected" => $submissionId]);
 		return "UPDATED";
 	}
@@ -878,6 +878,7 @@ class Assignment
 			$userData["submitTime"] = $submission["submitTime"];
 			$userData["weekNum"] = $submission["weekNum"];
 			$userData["graded"] = $submission["graded"];
+			$userData["DoctorsNote"] = $submission["DoctorsNote"];
 
 			if ($userData)
 				$responseData[] = $userData;
