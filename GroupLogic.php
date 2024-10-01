@@ -21,6 +21,10 @@ switch ($_SERVER["REQUEST_METHOD"]) {
       case "Insert":
         echo $group->Insert($_POST);
         break;
+      case "Update":
+        // print_r($_POST);
+        echo $group->Update($_POST);
+        break;
       case "Delete":
         $group->Delete($_POST);
         echo "DELETED";
