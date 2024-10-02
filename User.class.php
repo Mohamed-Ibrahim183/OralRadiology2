@@ -152,6 +152,11 @@ class USER
           $groupName = $stmt->fetch(PDO::FETCH_ASSOC);
           $user["Group"] = $groupName["Name"];
         }
+
+        // 3. get type
+        $stmt = $this->pdo->prepare("SELECT Name from users_types where Id=:selected");
+        $stmt->execute([":selected" => $user["Type"]]);
+        $user["Type"] = $stmt->fetchColumn();
       } else
         return ["Error" => "Password for $identifier is incorrect"];
     } else
@@ -176,10 +181,15 @@ class USER
   {
     require_once("./Group.class.php");
     $group = new GROUP($this->pdo);
-    $query = "Select * from users Where Type=:selected;";
-    $stmt = $this->pdo->prepare($query);
-    $stmt->bindParam(":selected", $type);
-    $stmt->execute();
+
+    //1. get the type from the types_tables
+    $stmt = $this->pdo->prepare("SELECT Id from users_types where Name=:selected");
+    $stmt->execute([":selected" => $type]);
+    $typeIdToSearch = $stmt->fetchColumn();
+
+    $stmt = $this->pdo->prepare("Select * from users Where Type=:selected;");
+    $stmt->execute([":selected" => $typeIdToSearch]);
+
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (!$result)
       return null;
@@ -189,8 +199,23 @@ class USER
       if ($userGroup != -1 && $userGroup) {
         $result[$key]["Group"] = $userGroup["Name"];
       }
+
+      // Type
+      $result[$key]["Type"] = $this->getUserType($result[$key]["Type"]);
     }
     return $result;
+  }
+  public function getUserType(int|string $Type, string $target = "Name")
+  {
+    if ($target === "Name") {
+      $stmt = $this->pdo->prepare("SELECT Name FROM users_types WHERE Id=:selected");
+      $stmt->execute([":selected" => $Type]);
+      return $stmt->fetchColumn();
+    } elseif ($target === "Id") {
+      $stmt = $this->pdo->prepare("SELECT Id FROM users_types WHERE Name=:selected");
+      $stmt->execute([":selected" => $Type]);
+      return $stmt->fetchColumn();
+    }
   }
   public function deleteUser($userId)
   {
@@ -200,11 +225,22 @@ class USER
     $stmt->execute();
   }
 
+  public function getTypes()
+  {
+    $stmt = $this->pdo->prepare("SELECT * from users_types");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
   public function insertByMSAId($userData)
   {
+    // 1. get the type id from users_types table
+    $stmt = $this->pdo->prepare("SELECT Id from users_types where Name=:selected");
+    $stmt->execute([":selected" => $userData["Type"]]);
+    $typeId = $stmt->fetchColumn();
     $this->helpers->prepareAndBind("INSERT into users (MSAId, Type, Password) Values", [
       "MSAId" => $userData["MSAId"],
-      "Type" => $userData["Type"],
+      "Type" => $typeId,
       "Password" => "pass",
     ], true);
     return true;

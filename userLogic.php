@@ -11,6 +11,7 @@ require_once('./DataBase.class.php');
 $db = new DATABASE();
 $pdo = $db->createConnection("oralradiology");
 $user = new USER($pdo);
+// echo json_encode($user->Login("1", "1"));
 
 
 $QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));
@@ -58,7 +59,11 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 			case "Users":
 				echo json_encode($user->getAll());
 				break;
+			case "UsersTypes":
+				echo json_encode($user->getTypes());
+				break;
 			case "UsersOfType":
+				// print_r($_GET);
 				echo json_encode($user->getSpecificType($_GET["Type"]));
 				break;
 			case "Delete":
