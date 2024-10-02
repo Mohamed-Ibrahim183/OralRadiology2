@@ -7,11 +7,12 @@ header("Access-Control-Allow-Methods: *");
 // FIRST OF ALL
 require_once('./User.class.php');
 require_once('./DataBase.class.php');
+require_once('./vars.class.php');
+
 
 $db = new DATABASE();
-$pdo = $db->createConnection("oralradiology");
+$pdo = $db->createConnection();
 $user = new USER($pdo);
-// echo json_encode($user->Login("1", "1"));
 
 
 $QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));

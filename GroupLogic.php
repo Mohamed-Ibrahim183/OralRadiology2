@@ -9,7 +9,7 @@ require_once("./DataBase.class.php");
 require_once("./Group.class.php");
 
 $db = new DATABASE();
-$pdo = $db->createConnection("oralradiology");
+$pdo = $db->createConnection();
 $group = new GROUP($pdo);
 
 $QueryArr = explode("/", trim(explode('?', str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']))[0], '/'));

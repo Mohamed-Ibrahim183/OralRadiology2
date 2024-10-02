@@ -1,12 +1,18 @@
 <?php
+require_once("./vars.class.php");
 class DATABASE
 {
-  public $PDO;
-  function createConnection($name = "oralradiology")
+  public PDO $PDO;
+  public $globals;
+  public function __construct()
   {
-    $dsn = "mysql:host=localhost;dbname=$name";
-    $dbUserName = "root";
-    $dbPassword = "";
+    $this->globals = new vars();
+  }
+  function createConnection()
+  {
+    $dsn = $this->globals->dsn;
+    $dbUserName = $this->globals->dbUserName;
+    $dbPassword = $this->globals->dbPassword;
 
     try {
       $pdo = new PDO($dsn, $dbUserName, $dbPassword);
